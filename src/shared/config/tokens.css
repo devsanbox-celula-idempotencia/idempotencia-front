@@ -1,0 +1,30 @@
+/*
+  Design tokens — idempotencia brand, v2 (claymorphism).
+  Sourced from the Branding.dc.html design doc: soft pastel surfaces,
+  puffy neumorphic shadows, Baloo 2 for UI/headings, JetBrains Mono for
+  technical/code content.
+*/
+:root {
+  --color-bg: #eef0fb;
+  --color-clay: #f4f2fc;
+  --color-ink: #3a3660;
+  --color-ink-soft: #6a6690;
+  --color-accent: #ff7a63;
+  --color-accent-2: #8c7bf6;
+  --color-success: #5fcf9a;
+  --color-warning: #ffc069;
+  --color-error: #ff5c72;
+
+  --shadow-out: 10px 10px 22px rgba(150, 140, 200, 0.35),
+    -10px -10px 22px rgba(255, 255, 255, 0.9);
+  --shadow-out-sm: 6px 6px 14px rgba(150, 140, 200, 0.32),
+    -6px -6px 14px rgba(255, 255, 255, 0.9);
+  --shadow-in: inset 4px 4px 8px rgba(150, 140, 200, 0.28),
+    inset -4px -4px 8px rgba(255, 255, 255, 0.85);
+
+  --font-heading: 'Baloo 2', system-ui, sans-serif;
+  --font-mono: 'JetBrains Mono', ui-monospace, monospace;
+
+  --radius-lg: 28px;
+  --radius-md: 20px;
+}
