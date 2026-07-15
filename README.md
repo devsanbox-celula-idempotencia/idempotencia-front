@@ -60,23 +60,59 @@ npm run preview
 
 ---
 
+## Docker
+
+El proyecto está encapsulado en una imagen Docker autocontenida — es la forma recomendada de desplegarlo. No requiere Node instalado en el host, solo Docker.
+
+**Cómo está armado (`Dockerfile`, multi-stage):**
+
+1. **Etapa `build`** (`node:20-alpine`): instala dependencias con `npm ci` y corre `npm run build`, generando `dist/`.
+2. **Etapa `runtime`** (`nginx:1.27-alpine`): copia únicamente `dist/` y sirve esos archivos estáticos con Nginx. La imagen final no contiene Node, `node_modules` ni código fuente — solo el sitio compilado.
+
+`nginx.conf` ya trae configurado:
+- **SPA fallback** (`try_files ... /index.html`) para cuando se agreguen rutas cliente.
+- **Cache agresivo** (`1y`, `immutable`) para `/assets/*`, que Vite ya versiona con hash en el nombre de archivo.
+- **Gzip** para texto, JS, CSS, JSON y SVG.
+- **Healthcheck** integrado en la imagen (`wget` contra `/` cada 30s).
+
+### Levantar con Docker Compose (recomendado)
+
+```bash
+docker compose up --build
+```
+
+Sirve el sitio en **http://localhost:8080/**. El puerto expuesto está definido en `docker-compose.yml` (`8080:80`) y se puede ajustar ahí según el entorno de destino.
+
+Para correrlo en background: `docker compose up --build -d`. Para bajarlo: `docker compose down`.
+
+### Levantar con Docker a mano
+
+```bash
+docker build -t idempotencia-frontend .
+docker run --rm -p 8080:80 idempotencia-frontend
+```
+
+### Notas para el pipeline de CI/CD
+
+- No hace falta `npm install` ni Node en el runner de CI — solo `docker build`. El `Dockerfile` resuelve todo internamente.
+- La imagen expone el puerto **80** (Nginx). Mapear al puerto que exponga el hosting/orquestador destino.
+- **Variables de entorno:** ninguna en este momento. Si se agregan en el futuro, deben inyectarse en **build time** (prefijo `VITE_`, convención de Vite) vía `docker build --build-arg` o `ARG`/`ENV` en el `Dockerfile` — no en runtime, porque el resultado ya es HTML/JS estático servido por Nginx.
+- El `.dockerignore` excluye `node_modules`, `dist`, `.git` y demás archivos que no deben viajar al contexto de build, para builds más rápidos y una imagen más liviana.
+
+---
+
 ## Despliegue (para DevOps)
 
-Este proyecto es una **SPA estática**: el artefacto a desplegar es únicamente el contenido de `dist/` tras correr `npm run build`.
-
-1. **Build:**
+1. **Build de la imagen:**
    ```bash
-   npm ci
-   npm run build
+   docker build -t idempotencia-frontend:<tag> .
    ```
-   (`npm ci` en vez de `npm install` en CI, para builds reproducibles a partir de `package-lock.json`.)
-2. **Servir** el contenido de `dist/` como archivos estáticos (Nginx, S3+CloudFront, Vercel, Netlify, etc.).
-3. **Dominio:** apuntar `idempotencia.andrescortes.dev` al hosting elegido. El sitio se sirve desde la raíz del dominio (no requiere subpath ni `base` especial en `vite.config.ts`).
-4. **SPA fallback:** aunque hoy solo hay una página, configurar el servidor para redirigir cualquier ruta desconocida a `index.html` (fallback típico de SPA), de forma que no haya que reconfigurar el hosting cuando se agreguen rutas reales.
-5. **Variables de entorno:** no hay ninguna en este momento. Si se agregan más adelante, deben inyectarse en build time con el prefijo `VITE_` (convención de Vite) y documentarse aquí.
-6. **HTTPS:** recomendado forzar HTTPS en el dominio final.
+2. **Publicar** la imagen en el registry que corresponda (ECR, GHCR, Docker Hub privado, etc.) y desplegarla en el orquestador/hosting elegido (Kubernetes, ECS, un VPS con `docker compose`, etc.), exponiendo el puerto **80** del contenedor.
+3. **Dominio:** apuntar `idempotencia.andrescortes.dev` al servicio/loadbalancer que enruta al contenedor. El sitio se sirve desde la raíz del dominio (no requiere subpath ni `base` especial en `vite.config.ts`).
+4. **HTTPS:** el contenedor solo sirve HTTP en el puerto 80; la terminación TLS debe hacerse en la capa delante (loadbalancer, reverse proxy o Cloudflare) apuntando al dominio final.
+5. **Variables de entorno:** no hay ninguna en este momento — ver la nota de build-time en la sección de Docker si se agregan más adelante.
 
-No hay contenedor Docker ni pipeline de CI/CD definidos todavía — el build es un simple `npm ci && npm run build` que puede correr en cualquier runner con Node ≥ 18.
+Alternativa sin Docker (build local con Node, sirviendo `dist/` como estático en cualquier hosting): ver [Build de producción](#build-de-producción) más arriba.
 
 ---
 
