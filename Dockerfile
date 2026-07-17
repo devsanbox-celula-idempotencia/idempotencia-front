@@ -7,6 +7,12 @@ COPY package.json package-lock.json ./
 RUN npm ci
 
 COPY . .
+
+# Build-time config (Vite bakes VITE_* vars into the bundle at build time).
+# Override with --build-arg VITE_API_BASE_URL=... for a different environment.
+ARG VITE_API_BASE_URL=https://api.idempotencia.andrescortes.dev
+ENV VITE_API_BASE_URL=${VITE_API_BASE_URL}
+
 RUN npm run build
 
 # ── Runtime stage ────────────────────────────────────────────────────────

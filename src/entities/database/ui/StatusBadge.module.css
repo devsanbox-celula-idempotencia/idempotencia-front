@@ -1,0 +1,48 @@
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 12px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+}
+
+.active {
+  background: linear-gradient(145deg, #c9f3dd, #a9ebc7);
+  color: #1d7a4c;
+}
+.active .dot {
+  background: var(--color-success);
+}
+
+.provisioning {
+  background: linear-gradient(145deg, #ffe3ba, #ffd28d);
+  color: #8a5a12;
+}
+.provisioning .dot {
+  background: var(--color-warning);
+}
+
+.suspended {
+  background: var(--color-clay);
+  color: var(--color-ink-soft);
+  box-shadow: var(--shadow-out-sm);
+}
+.suspended .dot {
+  background: var(--color-ink-soft);
+}
+
+.error {
+  background: linear-gradient(145deg, #ffc4cd, #ff8b9c);
+  color: #8a1626;
+}
+.error .dot {
+  background: var(--color-error);
+}

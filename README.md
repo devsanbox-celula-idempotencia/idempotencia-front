@@ -2,10 +2,10 @@
 
 Frontend de **idempotencia**, construido con **React + Vite + TypeScript** siguiendo arquitectura **Feature-Sliced Design (FSD)**.
 
-> **Estado actual:** landing page provisional ("Estamos trabajando para usted"). Es un placeholder mientras se desarrolla el producto — no requiere backend, API keys ni variables de entorno.
+> **Estado actual:** landing con métricas de plataforma, registro/login (email+password real contra el backend, más Google/GitHub simulados), pantalla de bienvenida post-aprovisionamiento y dashboard. El aprovisionamiento de base de datos y las métricas de plataforma todavía son simulados (mock en `localStorage`) — el backend aún no expone esos endpoints. Ver [Integración con backend](#integración-con-backend).
 
 - **Dominio de destino:** `idempotencia.andrescortes.dev`
-- **Tipo de sitio:** SPA estática (sin SSR, sin backend)
+- **Tipo de sitio:** SPA estática (sin SSR) que consume un backend externo para autenticación
 
 ---
 
@@ -14,7 +14,7 @@ Frontend de **idempotencia**, construido con **React + Vite + TypeScript** sigui
 - **Node.js** ≥ 18 (recomendado 20 LTS o superior)
 - **npm** ≥ 9 (viene con Node)
 
-No se requiere ninguna otra herramienta, base de datos ni variable de entorno para este estado del proyecto.
+No se requiere ninguna base de datos local. Para autenticación por email/password el proyecto pega contra el backend real (ver [Integración con backend](#integración-con-backend)) — no hace falta nada adicional para levantarlo en local, ya trae un valor por defecto.
 
 ---
 
@@ -24,7 +24,10 @@ No se requiere ninguna otra herramienta, base de datos ni variable de entorno pa
 # 1. Instalar dependencias
 npm install
 
-# 2. Levantar el servidor de desarrollo
+# 2. (opcional) copiar el archivo de variables de entorno
+cp .env.example .env.local
+
+# 3. Levantar el servidor de desarrollo
 npm run dev
 ```
 
@@ -57,6 +60,26 @@ Para verificar el build antes de desplegar:
 ```bash
 npm run preview
 ```
+
+---
+
+## Integración con backend
+
+El backend de autenticación es real y está documentado por el equipo de backend ("API Colmena"). Estado actual de cada pieza:
+
+| Flujo | Estado |
+|---|---|
+| Registro/login por email+password (`/auth/register`, `/auth/login`) | **Real**, conectado en `shared/api/authApi.ts`. |
+| Login/registro con Google/GitHub | **Simulado** en el cliente. El backend expone `/auth/google/login` y `/auth/github/login`, pero hoy su callback no redirige de vuelta al frontend con el token (devuelve el JSON crudo en el navegador) — conectar el redirect real hoy dejaría al usuario fuera de la SPA. Las URLs reales ya están listas en `shared/api/config.ts` (`OAUTH_URLS`) para cuando backend resuelva el callback. |
+| Aprovisionamiento de base de datos, métricas de la landing | **Mock** (`localStorage`, vía `shared/api/mock/`) — el backend todavía no expone estos endpoints. |
+
+**Variable de entorno:**
+
+```
+VITE_API_BASE_URL=https://api.idempotencia.andrescortes.dev
+```
+
+Ver [`.env.example`](.env.example). Si no se define, el proyecto usa ese mismo valor por defecto (hardcodeado en `shared/api/config.ts`). Debe inyectarse en **build time** (convención `VITE_*` de Vite): en Docker vía `--build-arg`/`ARG` en el `Dockerfile` (ver sección de Docker), en local vía `.env.local`.
 
 ---
 
@@ -96,7 +119,11 @@ docker run --rm -p 8080:80 idempotencia-frontend
 
 - No hace falta `npm install` ni Node en el runner de CI — solo `docker build`. El `Dockerfile` resuelve todo internamente.
 - La imagen expone el puerto **80** (Nginx). Mapear al puerto que exponga el hosting/orquestador destino.
-- **Variables de entorno:** ninguna en este momento. Si se agregan en el futuro, deben inyectarse en **build time** (prefijo `VITE_`, convención de Vite) vía `docker build --build-arg` o `ARG`/`ENV` en el `Dockerfile` — no en runtime, porque el resultado ya es HTML/JS estático servido por Nginx.
+- **Variables de entorno:** `VITE_API_BASE_URL` (ver [Integración con backend](#integración-con-backend)). Se inyecta en **build time** vía `--build-arg`:
+  ```bash
+  docker build --build-arg VITE_API_BASE_URL=https://api.idempotencia.andrescortes.dev -t idempotencia-frontend .
+  ```
+  Ya trae ese mismo valor por defecto si no se pasa el `--build-arg` — no en runtime, porque el resultado ya es HTML/JS estático servido por Nginx.
 - El `.dockerignore` excluye `node_modules`, `dist`, `.git` y demás archivos que no deben viajar al contexto de build, para builds más rápidos y una imagen más liviana.
 
 ---
@@ -110,7 +137,7 @@ docker run --rm -p 8080:80 idempotencia-frontend
 2. **Publicar** la imagen en el registry que corresponda (ECR, GHCR, Docker Hub privado, etc.) y desplegarla en el orquestador/hosting elegido (Kubernetes, ECS, un VPS con `docker compose`, etc.), exponiendo el puerto **80** del contenedor.
 3. **Dominio:** apuntar `idempotencia.andrescortes.dev` al servicio/loadbalancer que enruta al contenedor. El sitio se sirve desde la raíz del dominio (no requiere subpath ni `base` especial en `vite.config.ts`).
 4. **HTTPS:** el contenedor solo sirve HTTP en el puerto 80; la terminación TLS debe hacerse en la capa delante (loadbalancer, reverse proxy o Cloudflare) apuntando al dominio final.
-5. **Variables de entorno:** no hay ninguna en este momento — ver la nota de build-time en la sección de Docker si se agregan más adelante.
+5. **Variables de entorno:** `VITE_API_BASE_URL` — ver la nota de build-time en la sección de Docker.
 
 Alternativa sin Docker (build local con Node, sirviendo `dist/` como estático en cualquier hosting): ver [Build de producción](#build-de-producción) más arriba.
 
@@ -120,20 +147,21 @@ Alternativa sin Docker (build local con Node, sirviendo `dist/` como estático e
 
 ```
 src/
-├── app/          # Inicialización de la app: composición raíz, estilos globales, providers
-│   ├── App.tsx
-│   └── styles/global.css
-├── pages/        # Páginas completas, componen widgets/features/entities
-│   └── landing/
-│       ├── ui/LandingPage.tsx
-│       └── index.ts        # API pública del slice
-├── widgets/      # Bloques de UI compuestos y reutilizables entre páginas (aún vacío)
-├── features/     # Casos de uso con interacción del usuario (aún vacío)
-├── entities/     # Modelos de negocio y su UI asociada (aún vacío)
-├── shared/       # Código sin lógica de negocio, reutilizable en todo el proyecto
-│   ├── assets/    # Imágenes, gifs, etc.
+├── app/          # Inicialización: composición raíz, providers (sesión, router), estilos globales
+│   ├── providers/
+│   ├── routes/    # AppRouter + guards (RequireAuth, RequireGuest)
+│   └── App.tsx
+├── pages/        # Páginas completas: landing, login, register, welcome, dashboard
+│   └── <page>/ui + index.ts
+├── widgets/      # Bloques de UI compuestos entre páginas: site-header, platform-stats,
+│                 # database-connection-card, database-usage-card
+├── features/     # Casos de uso: auth-with-password, auth-with-provider, logout
+├── entities/     # Modelos de negocio + su UI: user (sesión), database, platform-stats
+├── shared/       # Sin lógica de negocio, reutilizable en todo el proyecto
+│   ├── api/       # authApi/databaseApi/platformStatsApi + httpClient + mocks (ver arriba)
 │   ├── config/    # Design tokens (colores, tipografías) de marca
-│   └── ui/        # Componentes de UI genéricos (aún vacío)
+│   ├── lib/       # Helpers puros (formatDate, copyToClipboard, getInitials...)
+│   └── ui/        # Componentes de UI genéricos (Button, Input, Logo, íconos)
 ├── main.tsx      # Entry point de React
 └── vite-env.d.ts
 ```
@@ -144,9 +172,7 @@ src/
 shared → entities → features → widgets → pages → app
 ```
 
-Cada slice expone su API pública a través de un `index.ts` (ver `src/pages/landing/index.ts`); el resto del código importa desde ahí, nunca desde archivos internos del slice.
-
-Las carpetas `widgets/`, `features/` y `entities/` están vacías (con un `.gitkeep`) porque la landing actual no las necesita todavía — quedan listas para cuando se agregue funcionalidad real.
+Cada slice expone su API pública a través de un `index.ts` (ej. `src/entities/database/index.ts`); el resto del código importa desde ahí, nunca desde archivos internos del slice.
 
 ---
 
