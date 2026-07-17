@@ -2,7 +2,6 @@ import { Route, Routes } from 'react-router-dom'
 import { LandingPage } from '@/pages/landing'
 import { LoginPage } from '@/pages/login'
 import { RegisterPage } from '@/pages/register'
-import { WelcomePage } from '@/pages/welcome'
 import { DashboardPage } from '@/pages/dashboard'
 import { OAuthCallbackPage } from '@/pages/oauth-callback'
 import { RequireAuth } from './RequireAuth'
@@ -20,7 +19,6 @@ export function AppRouter() {
       </Route>
 
       <Route element={<RequireAuth />}>
-        <Route path="/welcome" element={<WelcomePage />} />
         <Route path="/dashboard" element={<DashboardPage />} />
       </Route>
     </Routes>

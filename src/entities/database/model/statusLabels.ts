@@ -1,8 +1,10 @@
-import type { DatabaseStatus } from '@/shared/api'
+const KNOWN_STATUS_LABELS: Record<string, string> = {
+  Active: 'Activa',
+  Provisioning: 'Aprovisionando',
+  Paused: 'Pausada',
+  Error: 'Error',
+}
 
-export const DATABASE_STATUS_LABELS: Record<DatabaseStatus, string> = {
-  active: 'Activa',
-  provisioning: 'Aprovisionando',
-  suspended: 'Pausada',
-  error: 'Error',
+export function getDatabaseStatusLabel(status: string): string {
+  return KNOWN_STATUS_LABELS[status] ?? status
 }

@@ -27,6 +27,7 @@ export function PasswordAuthForm({ mode }: PasswordAuthFormProps) {
           label="Nombre completo"
           name="fullName"
           autoComplete="name"
+          maxLength={150}
           value={fullName}
           onChange={(e) => setFullName(e.target.value)}
           error={fieldErrors.fullName}
@@ -37,6 +38,7 @@ export function PasswordAuthForm({ mode }: PasswordAuthFormProps) {
         name="email"
         type="email"
         autoComplete="email"
+        maxLength={150}
         value={email}
         onChange={(e) => setEmail(e.target.value)}
         error={fieldErrors.email}
@@ -46,6 +48,7 @@ export function PasswordAuthForm({ mode }: PasswordAuthFormProps) {
         name="password"
         type="password"
         autoComplete={mode === 'register' ? 'new-password' : 'current-password'}
+        maxLength={100}
         value={password}
         onChange={(e) => setPassword(e.target.value)}
         error={fieldErrors.password}

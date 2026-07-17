@@ -1,20 +1,18 @@
-import { delay } from './mock/delay'
-import { getDatabasesForUser, provisionDatabaseFor } from './mock/mockStore'
-import type { DatabaseRecord } from './types'
+import { apiFetch } from './httpClient'
+import { trackDatabaseCreated } from './mock/mockStore'
+import type { DatabaseCredentials, DatabaseEngine, DatabaseRecord } from './types'
 
-export async function provisionDatabase(userId: string): Promise<DatabaseRecord> {
-  await delay(1200)
-  return provisionDatabaseFor(userId)
+/** POST /databases — backend real. La contraseña solo viene en esta respuesta, no se puede recuperar después. */
+export async function createDatabase(engine: DatabaseEngine, dbName: string): Promise<DatabaseCredentials> {
+  const credentials = await apiFetch<DatabaseCredentials>('/databases', {
+    method: 'POST',
+    body: JSON.stringify({ engine, dbName }),
+  })
+  trackDatabaseCreated(credentials.status === 'Active')
+  return credentials
 }
 
-/** Un usuario puede tener varias bases de datos — usado por el dashboard. */
-export async function getMyDatabases(userId: string): Promise<DatabaseRecord[]> {
-  await delay(400)
-  return getDatabasesForUser(userId)
-}
-
-/** Conveniencia para flujos que solo necesitan "la que acabo de crear" (ej. Welcome). */
-export async function getMyDatabase(userId: string): Promise<DatabaseRecord | null> {
-  const databases = await getMyDatabases(userId)
-  return databases[0] ?? null
+/** GET /databases — backend real. Nunca trae host/loginName/password. */
+export async function getMyDatabases(): Promise<DatabaseRecord[]> {
+  return apiFetch<DatabaseRecord[]>('/databases')
 }

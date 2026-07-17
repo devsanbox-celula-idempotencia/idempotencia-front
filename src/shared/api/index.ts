@@ -3,4 +3,13 @@ export * as databaseApi from './databaseApi'
 export * as platformStatsApi from './platformStatsApi'
 export { resetMockData } from './mock/mockStore'
 export { ApiError } from './httpClient'
-export type { AuthProviderName, AuthResponse, DatabaseRecord, DatabaseStatus, PlatformStats, Role } from './types'
+export type {
+  AuthProviderName,
+  AuthResponse,
+  DatabaseCredentials,
+  DatabaseEngine,
+  DatabaseRecord,
+  DatabaseStatus,
+  PlatformStats,
+  Role,
+} from './types'

@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { Link, useNavigate, useSearchParams } from 'react-router-dom'
-import { authApi, databaseApi } from '@/shared/api'
+import { authApi } from '@/shared/api'
 import type { AuthResponse, Role } from '@/shared/api'
 import { useSession } from '@/entities/user'
 import { SiteHeader } from '@/widgets/site-header'
@@ -48,16 +48,7 @@ export function OAuthCallbackPage() {
 
     setSession(authResponse)
     authApi.recordExternalSession(authResponse)
-
-    const ownerId = String(authResponse.userId)
-    databaseApi.getMyDatabase(ownerId).then(async (existing) => {
-      if (existing) {
-        navigate('/dashboard', { replace: true })
-      } else {
-        await databaseApi.provisionDatabase(ownerId)
-        navigate('/welcome', { replace: true })
-      }
-    })
+    navigate('/dashboard', { replace: true })
   }, [searchParams, setSession, navigate])
 
   return (

@@ -1,10 +1,11 @@
 /**
  * Contratos de datos compartidos entre frontend y backend.
  *
- * `AuthProviderName`, `AuthResponse` y `Role` reflejan el contrato REAL del
- * backend de autenticación (ver "API Colmena — Guía de consumo"). El resto
- * (`DatabaseRecord`, `PlatformStats`) todavía no tiene backend — los produce
- * `shared/api/mock/*` con la forma que se espera que tenga cuando exista.
+ * `AuthProviderName`, `AuthResponse`, `Role` y todo lo relacionado con
+ * `Database*` reflejan el contrato REAL del backend ("API Colmena — Guía de
+ * consumo" y la guía de endpoints de `/databases`). Solo `PlatformStats`
+ * sigue sin backend — lo produce `shared/api/mock/*` con la forma que se
+ * espera que tenga cuando exista.
  */
 
 export type AuthProviderName = 'google' | 'github'
@@ -21,22 +22,37 @@ export interface AuthResponse {
   role: Role
 }
 
-export type DatabaseStatus = 'provisioning' | 'active' | 'suspended' | 'error'
+/** Hoy solo "SqlServer" responde 201; el resto devuelve 501 ("próximamente"). */
+export type DatabaseEngine = 'SqlServer' | 'Postgres' | 'MySql' | 'Mongo'
 
+// `(string & {})` deja pasar cualquier valor que el backend agregue a futuro
+// sin romper el tipado, conservando el autocompletado de los conocidos.
+export type DatabaseStatus = 'Active' | 'Provisioning' | 'Paused' | 'Error' | (string & {})
+
+/** Forma de GET /databases — nunca trae credenciales, solo el POST de creación las devuelve. */
 export interface DatabaseRecord {
-  id: string
-  ownerId: string
+  databaseId: number
+  engine: DatabaseEngine
+  dbName: string
+  status: DatabaseStatus
+  maxStorageMB: number
+  currentSizeMB: number
+  lastActivityAt: string
+  createdAt: string
+  pausedAt: string | null
+}
+
+/** Forma de POST /databases (201) — la contraseña solo se ve esta vez, no se puede recuperar después. */
+export interface DatabaseCredentials {
+  databaseId: number
+  engine: DatabaseEngine
+  dbName: string
+  status: DatabaseStatus
+  maxStorageMB: number
   host: string
   port: number
-  name: string
-  username: string
+  loginName: string
   password: string
-  engine: string
-  status: DatabaseStatus
-  createdAt: string
-  spaceUsedMb: number
-  spaceMaxMb: number
-  lastActivityAt: string
 }
 
 export interface PlatformStats {

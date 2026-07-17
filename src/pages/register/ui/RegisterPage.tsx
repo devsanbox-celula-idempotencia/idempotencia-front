@@ -13,7 +13,7 @@ export function RegisterPage() {
           <span className={styles.kicker}>Empieza gratis</span>
           <h1 className={styles.title}>Crea tu cuenta</h1>
           <p className={styles.subtitle}>
-            Al registrarte se crea automáticamente tu base de datos MySQL, lista para usar.
+            Crea tu cuenta y arma tu primera base de datos desde el dashboard.
           </p>
 
           <PasswordAuthForm mode="register" />

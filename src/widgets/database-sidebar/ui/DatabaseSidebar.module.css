@@ -48,7 +48,7 @@
   box-shadow: var(--shadow-in);
 }
 
-.rowHost {
+.rowName {
   font-family: var(--font-mono);
   font-size: 12px;
   color: var(--color-ink);
@@ -56,6 +56,13 @@
   text-overflow: ellipsis;
   white-space: nowrap;
   width: 100%;
+}
+
+.empty {
+  font-size: 13px;
+  color: var(--color-ink-soft);
+  padding: 0 4px;
+  margin: 0;
 }
 
 @media (max-width: 720px) {

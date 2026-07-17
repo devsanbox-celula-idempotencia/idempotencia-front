@@ -10,11 +10,11 @@ export function LandingPage() {
       <SiteHeader />
 
       <section className={styles.hero}>
-        <span className={styles.kicker}>Bases de datos MySQL gratuitas</span>
+        <span className={styles.kicker}>Bases de datos gratuitas para tus proyectos</span>
         <h1 className={styles.title}>Tu propia base de datos, lista en segundos</h1>
         <p className={styles.subtitle}>
-          Inicia sesión con Google o GitHub y obtén automáticamente una base de datos MySQL
-          lista para usar, con credenciales propias y acceso inmediato.
+          Inicia sesión con Google o GitHub y crea la base de datos que necesites desde tu
+          dashboard, con el motor que elijas y credenciales propias.
         </p>
         <div className={styles.ctaRow}>
           <Link to="/register">

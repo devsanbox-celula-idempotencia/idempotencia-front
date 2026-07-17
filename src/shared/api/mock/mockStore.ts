@@ -1,12 +1,13 @@
-import type { AuthProviderName, AuthResponse, DatabaseRecord, PlatformStats, Role } from '../types'
+import type { AuthProviderName, AuthResponse, PlatformStats, Role } from '../types'
 
 /**
  * "Backend" falso persistido en localStorage — cubre lo que el backend real
- * todavía no expone: aprovisionamiento de base de datos y métricas de
- * plataforma. La autenticación real (password) SÍ pega contra el backend
- * (ver authApi.ts), pero también reporta actividad aquí (`trackAuthActivity`)
- * para que las métricas de la landing reflejen toda la actividad de este
- * navegador, sin importar si vino de password real o de OAuth simulado.
+ * todavía no expone: métricas de plataforma para la landing. La autenticación
+ * real (password) y la creación de bases de datos SÍ pegan contra el backend
+ * (ver authApi.ts / databaseApi.ts), pero también reportan actividad aquí
+ * (`trackAuthActivity`, `trackDatabaseCreated`) para que las métricas de la
+ * landing reflejen la actividad de este navegador sin depender de guardar
+ * los registros completos (las credenciales reales nunca pasan por aquí).
  */
 
 const STORAGE_KEY = 'idempotencia:mock-backend:v1'
@@ -27,11 +28,17 @@ interface MockState {
   providerIdentities: Partial<Record<AuthProviderName, number>>
   totalLogins: number
   nextUserId: number
-  databases: DatabaseRecord[]
+  databaseStats: { total: number; active: number }
 }
 
 function emptyState(): MockState {
-  return { users: [], providerIdentities: {}, totalLogins: 0, nextUserId: 1, databases: [] }
+  return {
+    users: [],
+    providerIdentities: {},
+    totalLogins: 0,
+    nextUserId: 1,
+    databaseStats: { total: 0, active: 0 },
+  }
 }
 
 function readState(): MockState {
@@ -121,43 +128,12 @@ export function trackAuthActivity(authResponse: AuthResponse): void {
   writeState(state)
 }
 
-function randomPassword(): string {
-  return crypto
-    .randomUUID()
-    .replace(/-/g, '')
-    .slice(0, 16)
-}
-
-export function provisionDatabaseFor(userId: string): DatabaseRecord {
+/** Se llama tras un POST /databases exitoso, para que la landing refleje la actividad de este navegador. */
+export function trackDatabaseCreated(isActive: boolean): void {
   const state = readState()
-  const existing = state.databases.find((d) => d.ownerId === userId)
-  if (existing) return existing
-
-  const now = new Date().toISOString()
-  const slug = userId.padStart(6, '0')
-  const database: DatabaseRecord = {
-    id: crypto.randomUUID(),
-    ownerId: userId,
-    host: `db-${slug}.idempotencia.andrescortes.dev`,
-    port: 3306,
-    name: `idm_${slug}`,
-    username: `idm_${slug}`,
-    password: randomPassword(),
-    engine: 'MySQL 8.0',
-    status: 'active',
-    createdAt: now,
-    spaceUsedMb: 4,
-    spaceMaxMb: 20,
-    lastActivityAt: now,
-  }
-  state.databases.push(database)
+  state.databaseStats.total += 1
+  if (isActive) state.databaseStats.active += 1
   writeState(state)
-  return database
-}
-
-export function getDatabasesForUser(userId: string): DatabaseRecord[] {
-  const state = readState()
-  return state.databases.filter((d) => d.ownerId === userId)
 }
 
 const ACTIVE_WINDOW_MS = 1000 * 60 * 60 * 24 * 7 // 7 días
@@ -166,15 +142,14 @@ export function computePlatformStats(): PlatformStats {
   const state = readState()
   const now = Date.now()
 
-  const activeDatabases = state.databases.filter((d) => d.status === 'active').length
   const activeUsers = state.users.filter(
     (u) => now - new Date(u.lastLoginAt).getTime() <= ACTIVE_WINDOW_MS,
   ).length
 
   return {
     totalUsers: state.users.length,
-    totalDatabases: state.databases.length,
-    activeDatabases,
+    totalDatabases: state.databaseStats.total,
+    activeDatabases: state.databaseStats.active,
     totalLogins: state.totalLogins,
     activeUsers,
     uptimePercentage: UPTIME_PERCENTAGE,

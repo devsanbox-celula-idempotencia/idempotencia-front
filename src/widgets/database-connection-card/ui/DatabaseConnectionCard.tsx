@@ -1,14 +1,12 @@
 import { useState } from 'react'
-import type { DatabaseRecord } from '@/entities/database'
-import { StatusBadge, DATABASE_STATUS_LABELS } from '@/entities/database'
+import type { DatabaseCredentials } from '@/entities/database'
+import { StatusBadge, getDatabaseStatusLabel } from '@/entities/database'
 import { copyToClipboard } from '@/shared/lib/copyToClipboard'
-import { formatDate } from '@/shared/lib/formatDate'
 import { downloadTextFile } from '@/shared/lib/downloadTextFile'
 import styles from './DatabaseConnectionCard.module.css'
 
 interface DatabaseConnectionCardProps {
-  database: DatabaseRecord
-  revealSecretsByDefault?: boolean
+  credentials: DatabaseCredentials
   allowDownload?: boolean
 }
 
@@ -16,11 +14,9 @@ interface FieldProps {
   label: string
   value: string
   wide?: boolean
-  mask?: boolean
 }
 
-function ConnectionField({ label, value, wide, mask }: FieldProps) {
-  const [revealed, setRevealed] = useState(!mask)
+function ConnectionField({ label, value, wide }: FieldProps) {
   const [copied, setCopied] = useState(false)
 
   async function handleCopy() {
@@ -29,18 +25,11 @@ function ConnectionField({ label, value, wide, mask }: FieldProps) {
     setTimeout(() => setCopied(false), 1500)
   }
 
-  const displayValue = mask && !revealed ? '•'.repeat(Math.min(value.length, 16)) : value
-
   return (
     <div className={`${styles.field} ${wide ? styles.fieldWide : ''}`}>
       <span className={styles.fieldLabel}>{label}</span>
       <span className={styles.fieldValueRow}>
-        <span className={styles.fieldValue}>{displayValue}</span>
-        {mask && (
-          <button type="button" className={styles.iconBtn} onClick={() => setRevealed((r) => !r)}>
-            {revealed ? 'Ocultar' : 'Revelar'}
-          </button>
-        )}
+        <span className={styles.fieldValue}>{value}</span>
         <button type="button" className={styles.iconBtn} onClick={handleCopy}>
           {copied ? 'Copiado' : 'Copiar'}
         </button>
@@ -49,58 +38,47 @@ function ConnectionField({ label, value, wide, mask }: FieldProps) {
   )
 }
 
-function formatCredentialsAsText(database: DatabaseRecord): string {
+function formatCredentialsAsText(credentials: DatabaseCredentials): string {
   return [
     'idempotencia — Credenciales de base de datos',
-    `Generado: ${formatDate(new Date().toISOString())}`,
     '',
-    `Host: ${database.host}`,
-    `Puerto: ${database.port}`,
-    `Motor: ${database.engine}`,
-    `Base de datos: ${database.name}`,
-    `Usuario: ${database.username}`,
-    `Contraseña: ${database.password}`,
-    `Estado: ${DATABASE_STATUS_LABELS[database.status]}`,
-    `Fecha de creación: ${formatDate(database.createdAt)}`,
+    `Host: ${credentials.host}`,
+    `Puerto: ${credentials.port}`,
+    `Motor: ${credentials.engine}`,
+    `Base de datos: ${credentials.dbName}`,
+    `Usuario: ${credentials.loginName}`,
+    `Contraseña: ${credentials.password}`,
+    `Estado: ${getDatabaseStatusLabel(credentials.status)}`,
+    `Espacio máximo: ${credentials.maxStorageMB} MB`,
     '',
-    'Guarda este archivo en un lugar seguro — la contraseña no volverá a mostrarse completa desde el dashboard.',
+    'Guarda este archivo en un lugar seguro — la contraseña no volverá a mostrarse completa.',
   ].join('\n')
 }
 
-export function DatabaseConnectionCard({
-  database,
-  revealSecretsByDefault = false,
-  allowDownload = false,
-}: DatabaseConnectionCardProps) {
+export function DatabaseConnectionCard({ credentials, allowDownload = true }: DatabaseConnectionCardProps) {
   function handleDownload() {
-    downloadTextFile(`${database.name}-credenciales.txt`, formatCredentialsAsText(database))
+    downloadTextFile(`${credentials.dbName}-credenciales.txt`, formatCredentialsAsText(credentials))
   }
 
   return (
     <div className={styles.card}>
       <div className={styles.header}>
-        <h3 className={styles.title}>Conexión a tu base de datos</h3>
-        <StatusBadge status={database.status} />
+        <h3 className={styles.title}>Tu base de datos está lista</h3>
+        <StatusBadge status={credentials.status} />
       </div>
 
-      {revealSecretsByDefault && (
-        <p className={styles.warning}>
-          Guarda estas credenciales ahora — la contraseña no volverá a mostrarse completa por defecto.
-        </p>
-      )}
+      <p className={styles.warning}>
+        Guarda estas credenciales ahora — la contraseña no volverá a mostrarse completa desde el dashboard.
+      </p>
 
       <div className={styles.fields}>
-        <ConnectionField label="Host" value={database.host} wide />
-        <ConnectionField label="Puerto" value={String(database.port)} />
-        <ConnectionField label="Motor" value={database.engine} />
-        <ConnectionField label="Base de datos" value={database.name} />
-        <ConnectionField label="Usuario" value={database.username} />
-        <ConnectionField
-          label="Contraseña"
-          value={database.password}
-          mask={!revealSecretsByDefault}
-        />
-        <ConnectionField label="Fecha de creación" value={formatDate(database.createdAt)} wide />
+        <ConnectionField label="Host" value={credentials.host} wide />
+        <ConnectionField label="Puerto" value={String(credentials.port)} />
+        <ConnectionField label="Motor" value={credentials.engine} />
+        <ConnectionField label="Base de datos" value={credentials.dbName} />
+        <ConnectionField label="Usuario" value={credentials.loginName} />
+        <ConnectionField label="Contraseña" value={credentials.password} />
+        <ConnectionField label="Espacio máximo" value={`${credentials.maxStorageMB} MB`} />
       </div>
 
       {allowDownload && (

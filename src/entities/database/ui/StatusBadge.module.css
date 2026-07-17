@@ -30,12 +30,12 @@
   background: var(--color-warning);
 }
 
-.suspended {
+.paused {
   background: var(--color-clay);
   color: var(--color-ink-soft);
   box-shadow: var(--shadow-out-sm);
 }
-.suspended .dot {
+.paused .dot {
   background: var(--color-ink-soft);
 }
 
@@ -45,4 +45,13 @@
 }
 .error .dot {
   background: var(--color-error);
+}
+
+.unknown {
+  background: var(--color-clay);
+  color: var(--color-ink-soft);
+  box-shadow: var(--shadow-out-sm);
+}
+.unknown .dot {
+  background: var(--color-ink-soft);
 }

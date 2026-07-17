@@ -1,6 +1,6 @@
 import { useState, type FormEvent } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { ApiError, authApi, databaseApi } from '@/shared/api'
+import { ApiError, authApi } from '@/shared/api'
 import { useSession } from '@/entities/user'
 
 interface FieldErrors {
@@ -10,6 +10,8 @@ interface FieldErrors {
 }
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+// Solo letras (incluye acentos/ñ) y espacios — sin números ni símbolos.
+const FULL_NAME_RE = /^[\p{L}\s]+$/u
 
 /** Reglas exactas documentadas por backend para /auth/register y /auth/login. */
 function validate(
@@ -17,19 +19,24 @@ function validate(
   values: { email: string; password: string; fullName: string },
 ): FieldErrors {
   const errors: FieldErrors = {}
+  const email = values.email.trim()
+  const password = values.password
+  const fullName = values.fullName.trim()
 
-  if (!values.email) errors.email = 'El correo es obligatorio.'
-  else if (values.email.length > 150) errors.email = 'Máximo 150 caracteres.'
-  else if (!EMAIL_RE.test(values.email)) errors.email = 'Formato de correo inválido.'
+  if (!email) errors.email = 'Falta rellenar el campo Correo.'
+  else if (email.length > 150) errors.email = 'El correo no puede superar los 150 caracteres.'
+  else if (!EMAIL_RE.test(email)) errors.email = 'El formato del correo no es válido.'
 
-  if (!values.password) errors.password = 'La contraseña es obligatoria.'
-  else if (values.password.length < 8 || values.password.length > 100) {
-    errors.password = 'Debe tener entre 8 y 100 caracteres.'
-  }
+  if (!password) errors.password = 'Falta rellenar el campo Contraseña.'
+  else if (password.length < 8) errors.password = 'La contraseña debe tener mínimo 8 caracteres.'
+  else if (password.length > 100) errors.password = 'La contraseña no puede superar los 100 caracteres.'
 
   if (mode === 'register') {
-    if (!values.fullName) errors.fullName = 'El nombre es obligatorio.'
-    else if (values.fullName.length > 150) errors.fullName = 'Máximo 150 caracteres.'
+    if (!fullName) errors.fullName = 'Falta rellenar el campo Nombre completo.'
+    else if (fullName.length > 150) errors.fullName = 'El nombre no puede superar los 150 caracteres.'
+    else if (!FULL_NAME_RE.test(fullName)) {
+      errors.fullName = 'El nombre completo no puede contener números ni caracteres especiales.'
+    }
   }
 
   return errors
@@ -54,18 +61,17 @@ export function usePasswordAuth(mode: 'login' | 'register') {
     setFieldErrors(errors)
     if (Object.keys(errors).length > 0) return
 
+    const trimmedEmail = email.trim()
+    const trimmedFullName = fullName.trim()
+
     setIsSubmitting(true)
     try {
-      if (mode === 'register') {
-        const authResponse = await authApi.registerWithPassword({ email, password, fullName })
-        setSession(authResponse)
-        await databaseApi.provisionDatabase(String(authResponse.userId))
-        navigate('/welcome')
-      } else {
-        const authResponse = await authApi.loginWithPassword({ email, password })
-        setSession(authResponse)
-        navigate('/dashboard')
-      }
+      const authResponse =
+        mode === 'register'
+          ? await authApi.registerWithPassword({ email: trimmedEmail, password, fullName: trimmedFullName })
+          : await authApi.loginWithPassword({ email: trimmedEmail, password })
+      setSession(authResponse)
+      navigate('/dashboard')
     } catch (error) {
       setGeneralError(error instanceof ApiError ? error.message : 'Ocurrió un error inesperado. Intenta de nuevo.')
     } finally {

@@ -3,36 +3,98 @@ import { SiteHeader } from '@/widgets/site-header'
 import { DatabaseSidebar } from '@/widgets/database-sidebar'
 import { DatabaseConnectionCard } from '@/widgets/database-connection-card'
 import { DatabaseUsageCard } from '@/widgets/database-usage-card'
-import { useSession } from '@/entities/user'
-import type { DatabaseRecord } from '@/entities/database'
-import { databaseApi } from '@/shared/api'
+import { CreateDatabaseForm } from '@/features/create-database'
+import type { DatabaseCredentials, DatabaseRecord } from '@/entities/database'
+import { ApiError, databaseApi } from '@/shared/api'
+import { Button } from '@/shared/ui'
 import styles from './DashboardPage.module.css'
 
 export function DashboardPage() {
-  const { user } = useSession()
   const [databases, setDatabases] = useState<DatabaseRecord[] | null>(null)
-  const [selectedId, setSelectedId] = useState<string | null>(null)
+  const [loadError, setLoadError] = useState<string | null>(null)
+  const [selectedId, setSelectedId] = useState<number | null>(null)
+  const [isCreating, setIsCreating] = useState(false)
+  const [justCreated, setJustCreated] = useState<DatabaseCredentials | null>(null)
+
+  function loadDatabases(preferredSelectedId: number | null) {
+    setLoadError(null)
+    databaseApi
+      .getMyDatabases()
+      .then((result) => {
+        setDatabases(result)
+        setSelectedId(preferredSelectedId ?? result[0]?.databaseId ?? null)
+      })
+      .catch((error) => {
+        setLoadError(error instanceof ApiError ? error.message : 'Ocurrió un error inesperado. Intenta de nuevo.')
+        setDatabases((prev) => prev ?? [])
+      })
+  }
 
   useEffect(() => {
-    if (!user) return
-    let cancelled = false
-    const userId = String(user.userId)
+    loadDatabases(null)
+  }, [])
 
-    databaseApi.getMyDatabases(userId).then(async (result) => {
-      // Puede no existir todavía si el usuario vino de un login real cuya
-      // cuenta no pasó por el flujo de registro de esta app (sin DB mock asociada).
-      const resolved = result.length > 0 ? result : [await databaseApi.provisionDatabase(userId)]
-      if (!cancelled) {
-        setDatabases(resolved)
-        setSelectedId(resolved[0]?.id ?? null)
-      }
-    })
-    return () => {
-      cancelled = true
+  function handleCreated(credentials: DatabaseCredentials) {
+    setIsCreating(false)
+    setJustCreated(credentials)
+  }
+
+  function handleDismissCreated() {
+    const createdId = justCreated?.databaseId ?? null
+    setJustCreated(null)
+    loadDatabases(createdId)
+  }
+
+  const selectedDatabase = databases?.find((db) => db.databaseId === selectedId) ?? null
+
+  function renderMain() {
+    if (isCreating) {
+      return <CreateDatabaseForm onCreated={handleCreated} onCancel={() => setIsCreating(false)} />
     }
-  }, [user])
 
-  const selectedDatabase = databases?.find((db) => db.id === selectedId) ?? null
+    if (justCreated) {
+      return (
+        <div className={styles.cards}>
+          <DatabaseConnectionCard credentials={justCreated} allowDownload />
+          <Button variant="primary" onClick={handleDismissCreated}>
+            Entendido, ver mis bases de datos
+          </Button>
+        </div>
+      )
+    }
+
+    if (databases === null) {
+      return <p className={styles.loading}>Cargando tus bases de datos…</p>
+    }
+
+    if (selectedDatabase) {
+      return (
+        <div className={styles.cards}>
+          <DatabaseUsageCard database={selectedDatabase} />
+        </div>
+      )
+    }
+
+    if (loadError) {
+      return (
+        <div className={styles.empty}>
+          <p>No pudimos cargar tus bases de datos: {loadError}</p>
+          <Button variant="primary" onClick={() => loadDatabases(null)}>
+            Reintentar
+          </Button>
+        </div>
+      )
+    }
+
+    return (
+      <div className={styles.empty}>
+        <p>Aún no tienes bases de datos. Crea la primera para empezar a usarla.</p>
+        <Button variant="primary" onClick={() => setIsCreating(true)}>
+          + Crear base de datos
+        </Button>
+      </div>
+    )
+  }
 
   return (
     <div className={styles.page}>
@@ -43,19 +105,23 @@ export function DashboardPage() {
           <p className={styles.subtitle}>Gestiona tus bases de datos y revisa su estado.</p>
         </div>
 
-        {databases && selectedDatabase ? (
-          <div className={styles.body}>
-            <DatabaseSidebar databases={databases} selectedId={selectedId} onSelect={setSelectedId} />
-            <div className={styles.main}>
-              <div className={styles.cards}>
-                <DatabaseConnectionCard database={selectedDatabase} />
-                <DatabaseUsageCard database={selectedDatabase} />
-              </div>
-            </div>
-          </div>
-        ) : (
-          <p className={styles.loading}>Cargando tus bases de datos…</p>
-        )}
+        <div className={styles.body}>
+          <DatabaseSidebar
+            databases={databases ?? []}
+            selectedId={selectedId}
+            isCreating={isCreating}
+            onSelect={(id) => {
+              setIsCreating(false)
+              setJustCreated(null)
+              setSelectedId(id)
+            }}
+            onCreateClick={() => {
+              setJustCreated(null)
+              setIsCreating(true)
+            }}
+          />
+          <div className={styles.main}>{renderMain()}</div>
+        </div>
       </main>
     </div>
   )
