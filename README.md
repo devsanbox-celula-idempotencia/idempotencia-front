@@ -1,5 +1,6 @@
 # idempotencia — Frontend
 
+
 Frontend de **idempotencia**, construido con **React + Vite + TypeScript** siguiendo arquitectura **Feature-Sliced Design (FSD)**.
 
 > **Estado actual:** landing page provisional ("Estamos trabajando para usted"). Es un placeholder mientras se desarrolla el producto — no requiere backend, API keys ni variables de entorno.
