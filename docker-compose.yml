@@ -6,5 +6,11 @@ services:
     image: idempotencia-frontend:latest
     container_name: idempotencia-frontend
     ports:
-      - "8080:80"
+      - "8080:80" # <-- Opcional: lo puedes borrar después para que nadie entre directo por IP
     restart: unless-stopped
+    networks:
+      - red-proxy          # <--- Enlazamos el frontend a la red del proxy
+
+networks:
+  red-proxy:
+    external: true         # <--- Le decimos a Docker que use la red que ya creamos
