@@ -1,16 +1,19 @@
 services:
-  frontend:
+  frontend-QA:
     build:
       context: .
       dockerfile: Dockerfile
-    image: idempotencia-frontend:latest
-    container_name: idempotencia-frontend
+    image: idempotencia-frontend-QA:latest
+    container_name: idempotencia-frontend-QA
     ports:
-      - "8080:80" # <-- Opcional: lo puedes borrar después para que nadie entre directo por IP
+      - "8081:8081" 
     restart: unless-stopped
     networks:
-      - red-proxy          # <--- Enlazamos el frontend a la red del proxy
+      - red-proxy
+    mem_limit: 256m
+    cpus: 0.5
 
 networks:
   red-proxy:
-    external: true         # <--- Le decimos a Docker que use la red que ya creamos
+    external: true
+ 
