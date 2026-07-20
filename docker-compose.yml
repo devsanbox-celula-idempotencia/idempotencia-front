@@ -5,8 +5,8 @@ services:
       dockerfile: Dockerfile
       args:
         VITE_API_BASE_URL: ${VITE_API_BASE_URL:-https://api.idempotencia.andrescortes.dev}
-    image: idempotencia-frontend-QA:latest
-    container_name: idempotencia-frontend-QA
+    image: idempotencia-frontend-qa:latest
+    container_name: idempotencia-frontend-qa
     ports:
       - "8081:8081" 
     restart: unless-stopped
