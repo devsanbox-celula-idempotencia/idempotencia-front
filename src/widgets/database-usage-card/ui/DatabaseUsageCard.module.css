@@ -1,0 +1,89 @@
+.card {
+  background: var(--color-clay);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-out);
+  padding: 32px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.title {
+  font-size: 20px;
+  font-family: var(--font-mono);
+}
+
+.engine {
+  font-size: 13px;
+  color: var(--color-ink-soft);
+  margin: 2px 0 0;
+}
+
+.note {
+  font-size: 13px;
+  color: var(--color-ink-soft);
+  background: var(--color-bg);
+  box-shadow: var(--shadow-in);
+  border-radius: var(--radius-md);
+  padding: 10px 14px;
+  margin: 0;
+}
+
+.meterTrack {
+  height: 14px;
+  border-radius: 999px;
+  background: var(--color-bg);
+  box-shadow: var(--shadow-in);
+  overflow: hidden;
+}
+
+.meterFill {
+  height: 100%;
+  border-radius: 999px;
+  transition: width 0.4s ease;
+}
+
+.meterOk {
+  background: linear-gradient(90deg, #7fe0b4, #5fcf9a);
+}
+.meterWarning {
+  background: linear-gradient(90deg, #ffd28d, #ffc069);
+}
+.meterDanger {
+  background: linear-gradient(90deg, #ff8b9c, #ff5c72);
+}
+
+.meterCaption {
+  display: flex;
+  justify-content: space-between;
+  font-size: 13px;
+  color: var(--color-ink-soft);
+}
+
+.meterCaption strong {
+  color: var(--color-ink);
+  font-family: var(--font-mono);
+  font-weight: 500;
+}
+
+.metaRow {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  font-size: 13px;
+  color: var(--color-ink-soft);
+  border-top: 1px solid rgba(58, 54, 96, 0.1);
+  padding-top: 14px;
+}
+
+.metaRow strong {
+  color: var(--color-ink);
+  font-weight: 600;
+}
