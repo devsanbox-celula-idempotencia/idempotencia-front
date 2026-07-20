@@ -8,7 +8,7 @@ services:
     image: idempotencia-frontend-qa:latest
     container_name: idempotencia-frontend-qa
     ports:
-      - "8081:8081" 
+      - "8081:80" 
     restart: unless-stopped
     networks:
       - red-proxy
