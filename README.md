@@ -1,5 +1,6 @@
 # idempotencia — Frontend
 
+
 Frontend de **idempotencia**, construido con **React + Vite + TypeScript** siguiendo arquitectura **Feature-Sliced Design (FSD)**.
 
 > **Estado actual:** landing con métricas de plataforma, registro/login (email+password real contra el backend, más Google/GitHub simulados), pantalla de bienvenida post-aprovisionamiento y dashboard. El aprovisionamiento de base de datos y las métricas de plataforma todavía son simulados (mock en `localStorage`) — el backend aún no expone esos endpoints. Ver [Integración con backend](#integración-con-backend).

@@ -1,12 +1,23 @@
 services:
-  frontend:
+  frontend-QA:
     build:
       context: .
       dockerfile: Dockerfile
       args:
         VITE_API_BASE_URL: ${VITE_API_BASE_URL:-https://api.idempotencia.andrescortes.dev}
-    image: idempotencia-frontend:latest
-    container_name: idempotencia-frontend
+    image: idempotencia-frontend-QA:latest
+    container_name: idempotencia-frontend-QA
     ports:
-      - "8080:80"
+      - "8081:8081" 
     restart: unless-stopped
+    networks:
+      - red-proxy
+    mem_limit: 256m
+    cpus: 0.5
+
+networks:
+  red-proxy:
+    external: true
+ 
+ 
+ 
