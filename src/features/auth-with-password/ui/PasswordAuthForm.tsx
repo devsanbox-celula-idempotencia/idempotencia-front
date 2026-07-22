@@ -50,7 +50,7 @@ export function PasswordAuthForm({ mode }: PasswordAuthFormProps) {
         name="password"
         type="password"
         autoComplete={mode === 'register' ? 'new-password' : 'current-password'}
-        maxLength={100}
+        maxLength={12}
         value={password}
         onChange={(e) => setPassword(e.target.value)}
         error={fieldErrors.password}
@@ -61,7 +61,7 @@ export function PasswordAuthForm({ mode }: PasswordAuthFormProps) {
           name="confirmPassword"
           type="password"
           autoComplete="new-password"
-          maxLength={100}
+          maxLength={12}
           value={confirmPassword}
           onChange={(e) => setConfirmPassword(e.target.value)}
           error={fieldErrors.confirmPassword}
