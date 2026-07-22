@@ -63,6 +63,7 @@ function toAuthResponse(record: MockUserRecord): AuthResponse {
     email: record.email,
     fullName: record.fullName,
     role: record.role,
+    mySqlDatabase: null,
   }
 }
 
