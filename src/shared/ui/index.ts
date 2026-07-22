@@ -1,5 +1,6 @@
 export { Button } from './Button/Button'
 export { Input } from './Input/Input'
 export { Logo } from './Logo/Logo'
+export { Toast } from './Toast/Toast'
 export { GoogleIcon } from './icons/GoogleIcon'
 export { GithubIcon } from './icons/GithubIcon'

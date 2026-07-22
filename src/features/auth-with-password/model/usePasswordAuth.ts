@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { ApiError, authApi } from '@/shared/api'
 import { useSession } from '@/entities/user'
 import { setPendingDatabaseReveal } from '@/shared/lib/pendingDatabaseReveal'
+import { setPendingToast } from '@/shared/lib/pendingToast'
 
 interface FieldErrors {
   email?: string
@@ -31,7 +32,7 @@ function validate(
 
   if (!password) errors.password = 'Falta rellenar el campo Contraseña.'
   else if (password.length < 8) errors.password = 'La contraseña debe tener mínimo 8 caracteres.'
-  else if (password.length > 100) errors.password = 'La contraseña no puede superar los 100 caracteres.'
+  else if (password.length > 12) errors.password = 'La contraseña no puede superar los 12 caracteres.'
 
   if (mode === 'register') {
     if (!fullName) errors.fullName = 'Falta rellenar el campo Nombre completo.'
@@ -80,6 +81,7 @@ export function usePasswordAuth(mode: 'login' | 'register') {
           : await authApi.loginWithPassword({ email: trimmedEmail, password })
       setSession(authResponse)
       if (authResponse.mySqlDatabase) setPendingDatabaseReveal(authResponse.mySqlDatabase)
+      if (mode === 'register') setPendingToast('Registro exitoso.')
       navigate('/dashboard')
     } catch (error) {
       setGeneralError(error instanceof ApiError ? error.message : 'Ocurrió un error inesperado. Intenta de nuevo.')

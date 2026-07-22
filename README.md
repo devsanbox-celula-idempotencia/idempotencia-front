@@ -108,9 +108,17 @@ El proyecto está encapsulado en una imagen Docker autocontenida — es la forma
 docker compose up --build
 ```
 
-Sirve el sitio en **http://localhost:8080/**. El puerto expuesto está definido en `docker-compose.yml` (`8080:80`) y se puede ajustar ahí según el entorno de destino.
+Sirve el sitio en **http://localhost:8080/** por defecto. El puerto host se controla con la variable de entorno `FRONTEND_PORT` (`docker-compose.yml` la interpola como `"${FRONTEND_PORT:-8080}:80"`) — el `80` del contenedor no cambia, ahí adentro siempre escucha Nginx.
 
-Para correrlo en background: `docker compose up --build -d`. Para bajarlo: `docker compose down`.
+Docker Compose **no** lee `.env.local` automáticamente (solo `.env`, y el proyecto no versiona uno para no pisar el que usa Vite en dev). Para que tome el `FRONTEND_PORT` de `.env.local`:
+
+```bash
+docker compose --env-file .env.local up --build
+```
+
+Sin ese flag, o sin definir `FRONTEND_PORT` en el entorno, usa el default `8080`.
+
+Para correrlo en background: agregar `-d`. Para bajarlo: `docker compose down`.
 
 ### Levantar con Docker a mano
 
