@@ -12,6 +12,8 @@ export function PasswordAuthForm({ mode }: PasswordAuthFormProps) {
     setEmail,
     password,
     setPassword,
+    confirmPassword,
+    setConfirmPassword,
     fullName,
     setFullName,
     fieldErrors,
@@ -48,11 +50,23 @@ export function PasswordAuthForm({ mode }: PasswordAuthFormProps) {
         name="password"
         type="password"
         autoComplete={mode === 'register' ? 'new-password' : 'current-password'}
-        maxLength={100}
+        maxLength={12}
         value={password}
         onChange={(e) => setPassword(e.target.value)}
         error={fieldErrors.password}
       />
+      {mode === 'register' && (
+        <Input
+          label="Confirmar contraseña"
+          name="confirmPassword"
+          type="password"
+          autoComplete="new-password"
+          maxLength={12}
+          value={confirmPassword}
+          onChange={(e) => setConfirmPassword(e.target.value)}
+          error={fieldErrors.confirmPassword}
+        />
+      )}
       {generalError && <p className={styles.generalError}>{generalError}</p>}
       <Button type="submit" fullWidth disabled={isSubmitting}>
         {isSubmitting ? 'Enviando…' : mode === 'login' ? 'Iniciar sesión' : 'Crear cuenta'}

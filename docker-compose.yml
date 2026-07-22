@@ -5,10 +5,10 @@ services:
       dockerfile: Dockerfile
       args:
         VITE_API_BASE_URL: ${VITE_API_BASE_URL:-https://api.idempotencia.andrescortes.dev}
-    image: idempotencia-frontend-qa:latest
-    container_name: idempotencia-frontend-qa
+    image: idempotencia-frontend-QA:latest
+    container_name: idempotencia-frontend-QA
     ports:
-      - "8081:80" 
+      - "${FRONTEND_PORT:-8080}:80"
     restart: unless-stopped
     networks:
       - red-proxy
@@ -18,6 +18,3 @@ services:
 networks:
   red-proxy:
     external: true
- 
- 
- 

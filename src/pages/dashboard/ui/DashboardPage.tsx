@@ -6,7 +6,9 @@ import { DatabaseUsageCard } from '@/widgets/database-usage-card'
 import { CreateDatabaseForm } from '@/features/create-database'
 import type { DatabaseCredentials, DatabaseRecord } from '@/entities/database'
 import { ApiError, databaseApi } from '@/shared/api'
-import { Button } from '@/shared/ui'
+import { Button, Toast } from '@/shared/ui'
+import { takePendingDatabaseReveal } from '@/shared/lib/pendingDatabaseReveal'
+import { takePendingToast } from '@/shared/lib/pendingToast'
 import styles from './DashboardPage.module.css'
 
 export function DashboardPage() {
@@ -15,6 +17,18 @@ export function DashboardPage() {
   const [selectedId, setSelectedId] = useState<number | null>(null)
   const [isCreating, setIsCreating] = useState(false)
   const [justCreated, setJustCreated] = useState<DatabaseCredentials | null>(null)
+  const [toastMessage, setToastMessage] = useState<string | null>(null)
+
+  // La BD recién aprovisionada (login/register por contraseña) y el mensaje
+  // de éxito quedan en un puente en memoria, no en location.state — ver
+  // pendingDatabaseReveal.ts / pendingToast.ts.
+  useEffect(() => {
+    const pendingDatabase = takePendingDatabaseReveal()
+    if (pendingDatabase) setJustCreated(pendingDatabase)
+
+    const pendingToast = takePendingToast()
+    if (pendingToast) setToastMessage(pendingToast)
+  }, [])
 
   function loadDatabases(preferredSelectedId: number | null) {
     setLoadError(null)
@@ -98,6 +112,7 @@ export function DashboardPage() {
 
   return (
     <div className={styles.page}>
+      {toastMessage && <Toast message={toastMessage} onDismiss={() => setToastMessage(null)} />}
       <SiteHeader />
       <main className={styles.content}>
         <div>

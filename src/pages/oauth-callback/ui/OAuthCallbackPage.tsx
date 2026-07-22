@@ -44,7 +44,13 @@ export function OAuthCallbackPage() {
       email,
       fullName,
       role: role as Role,
+      mySqlDatabase: null,
     }
+
+    // El token y el resto de los datos viajan en la query string (limitación
+    // conocida del backend, ver guía de integración) — se limpia la URL apenas
+    // se leen para que no queden en el historial del navegador.
+    window.history.replaceState(null, '', '/oauth/callback')
 
     setSession(authResponse)
     authApi.recordExternalSession(authResponse)

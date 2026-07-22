@@ -3,7 +3,7 @@
 
 Frontend de **idempotencia**, construido con **React + Vite + TypeScript** siguiendo arquitectura **Feature-Sliced Design (FSD)**.
 
-> **Estado actual:** landing con métricas de plataforma, registro/login (email+password real contra el backend, más Google/GitHub simulados), pantalla de bienvenida post-aprovisionamiento y dashboard. El aprovisionamiento de base de datos y las métricas de plataforma todavía son simulados (mock en `localStorage`) — el backend aún no expone esos endpoints. Ver [Integración con backend](#integración-con-backend).
+> **Estado actual:** landing con métricas de plataforma, registro/login (email+password y Google/GitHub, ambos reales contra el backend) y dashboard con gestión de bases de datos (crear, listar, ver estado/uso — también real). Ya no hay una pantalla de bienvenida separada: si el registro/login por contraseña aprovisiona automáticamente una base MySQL, sus credenciales se revelan una única vez directamente en el dashboard. Solo las métricas de la landing siguen simuladas (mock en `localStorage`) — el backend expone `GET /statistics` pero es solo para rol Admin y todavía no está conectado. Ver [Integración con backend](#integración-con-backend).
 
 - **Dominio de destino:** `idempotencia.andrescortes.dev`
 - **Tipo de sitio:** SPA estática (sin SSR) que consume un backend externo para autenticación
@@ -66,13 +66,15 @@ npm run preview
 
 ## Integración con backend
 
-El backend de autenticación es real y está documentado por el equipo de backend ("API Colmena"). Estado actual de cada pieza:
+El backend ("API Colmena") está documentado por el equipo de backend. Estado actual de cada pieza:
 
 | Flujo | Estado |
 |---|---|
-| Registro/login por email+password (`/auth/register`, `/auth/login`) | **Real**, conectado en `shared/api/authApi.ts`. |
-| Login/registro con Google/GitHub | **Simulado** en el cliente. El backend expone `/auth/google/login` y `/auth/github/login`, pero hoy su callback no redirige de vuelta al frontend con el token (devuelve el JSON crudo en el navegador) — conectar el redirect real hoy dejaría al usuario fuera de la SPA. Las URLs reales ya están listas en `shared/api/config.ts` (`OAUTH_URLS`) para cuando backend resuelva el callback. |
-| Aprovisionamiento de base de datos, métricas de la landing | **Mock** (`localStorage`, vía `shared/api/mock/`) — el backend todavía no expone estos endpoints. |
+| Registro/login por email+password (`/auth/register`, `/auth/login`) | **Real**, conectado en `shared/api/authApi.ts`. Incluye confirmación de contraseña en el registro (solo validación de cliente). |
+| Aprovisionamiento automático de BD MySQL en el primer registro/login por contraseña | **Real**. El backend lo crea solo y devuelve sus credenciales una única vez dentro del propio `AuthResponse` (campo `mySqlDatabase`) — el dashboard las revela ahí mismo apenas se detectan (ver `shared/lib/pendingDatabaseReveal.ts`), porque no se pueden volver a consultar después. |
+| Login/registro con Google/GitHub | **Real**. El botón redirige de verdad a `/auth/{provider}/login`; el backend redirige de vuelta a `/oauth/callback` con los datos de sesión en la query string, ruta pública implementada en `pages/oauth-callback`. A diferencia del flujo por contraseña, OAuth **no** aprovisiona ninguna base de datos automáticamente — el usuario la crea manualmente desde el dashboard, igual que cualquier base adicional. |
+| Crear/listar bases de datos (`POST /databases`, `GET /databases`) | **Real**, conectado en `shared/api/databaseApi.ts`. El motor `SqlServer` está disponible hoy; `Postgres`/`MySql`/`Mongo` devuelven `501` (marcados como "Próximamente" en el selector). `GET /databases` nunca devuelve credenciales — solo la respuesta de creación las trae, una vez. |
+| Métricas de la landing (usuarios, bases de datos creadas/activas, etc.) | **Mock** (`localStorage`, vía `shared/api/mock/`). El backend expone `GET /statistics`, pero es exclusivo para rol Admin y aún no está conectado. |
 
 **Variable de entorno:**
 
@@ -81,6 +83,8 @@ VITE_API_BASE_URL=https://api.idempotencia.andrescortes.dev
 ```
 
 Ver [`.env.example`](.env.example). Si no se define, el proyecto usa ese mismo valor por defecto (hardcodeado en `shared/api/config.ts`). Debe inyectarse en **build time** (convención `VITE_*` de Vite): en Docker vía `--build-arg`/`ARG` en el `Dockerfile` (ver sección de Docker), en local vía `.env.local`.
+
+Para pruebas contra un backend corriendo en local, `.env.local` puede apuntar a `http://localhost:5175` (login/registro por contraseña funcionan por HTTP). El flujo OAuth necesita HTTPS del lado del backend (`https://localhost:7113` en desarrollo) — con el backend en HTTP, los botones de Google/GitHub no van a completar el login.
 
 ---
 
@@ -105,9 +109,17 @@ El proyecto está encapsulado en una imagen Docker autocontenida — es la forma
 docker compose up --build
 ```
 
-Sirve el sitio en **http://localhost:8080/**. El puerto expuesto está definido en `docker-compose.yml` (`8080:80`) y se puede ajustar ahí según el entorno de destino.
+Sirve el sitio en **http://localhost:8080/** por defecto. El puerto host se controla con la variable de entorno `FRONTEND_PORT` (`docker-compose.yml` la interpola como `"${FRONTEND_PORT:-8080}:80"`) — el `80` del contenedor no cambia, ahí adentro siempre escucha Nginx.
 
-Para correrlo en background: `docker compose up --build -d`. Para bajarlo: `docker compose down`.
+Docker Compose **no** lee `.env.local` automáticamente (solo `.env`, y el proyecto no versiona uno para no pisar el que usa Vite en dev). Para que tome el `FRONTEND_PORT` de `.env.local`:
+
+```bash
+docker compose --env-file .env.local up --build
+```
+
+Sin ese flag, o sin definir `FRONTEND_PORT` en el entorno, usa el default `8080`.
+
+Para correrlo en background: agregar `-d`. Para bajarlo: `docker compose down`.
 
 ### Levantar con Docker a mano
 
@@ -152,16 +164,16 @@ src/
 │   ├── providers/
 │   ├── routes/    # AppRouter + guards (RequireAuth, RequireGuest)
 │   └── App.tsx
-├── pages/        # Páginas completas: landing, login, register, welcome, dashboard
+├── pages/        # Páginas completas: landing, login, register, oauth-callback, dashboard
 │   └── <page>/ui + index.ts
 ├── widgets/      # Bloques de UI compuestos entre páginas: site-header, platform-stats,
-│                 # database-connection-card, database-usage-card
-├── features/     # Casos de uso: auth-with-password, auth-with-provider, logout
+│                 # database-sidebar, database-connection-card, database-usage-card
+├── features/     # Casos de uso: auth-with-password, auth-with-provider, create-database, logout
 ├── entities/     # Modelos de negocio + su UI: user (sesión), database, platform-stats
 ├── shared/       # Sin lógica de negocio, reutilizable en todo el proyecto
-│   ├── api/       # authApi/databaseApi/platformStatsApi + httpClient + mocks (ver arriba)
+│   ├── api/       # authApi/databaseApi/platformStatsApi + httpClient + session-storage + mocks
 │   ├── config/    # Design tokens (colores, tipografías) de marca
-│   ├── lib/       # Helpers puros (formatDate, copyToClipboard, getInitials...)
+│   ├── lib/       # Helpers puros (formatDate, copyToClipboard, getInitials, downloadTextFile...)
 │   └── ui/        # Componentes de UI genéricos (Button, Input, Logo, íconos)
 ├── main.tsx      # Entry point de React
 └── vite-env.d.ts

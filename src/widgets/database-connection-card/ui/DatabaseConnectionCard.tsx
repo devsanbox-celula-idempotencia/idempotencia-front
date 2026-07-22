@@ -48,8 +48,8 @@ function formatCredentialsAsText(credentials: DatabaseCredentials): string {
     `Base de datos: ${credentials.dbName}`,
     `Usuario: ${credentials.loginName}`,
     `Contraseña: ${credentials.password}`,
-    `Estado: ${getDatabaseStatusLabel(credentials.status)}`,
-    `Espacio máximo: ${credentials.maxStorageMB} MB`,
+    `Estado: ${getDatabaseStatusLabel(credentials.status ?? 'Active')}`,
+    ...(credentials.maxStorageMB !== undefined ? [`Espacio máximo: ${credentials.maxStorageMB} MB`] : []),
     '',
     'Guarda este archivo en un lugar seguro — la contraseña no volverá a mostrarse completa.',
   ].join('\n')
@@ -64,7 +64,7 @@ export function DatabaseConnectionCard({ credentials, allowDownload = true }: Da
     <div className={styles.card}>
       <div className={styles.header}>
         <h3 className={styles.title}>Tu base de datos está lista</h3>
-        <StatusBadge status={credentials.status} />
+        <StatusBadge status={credentials.status ?? 'Active'} />
       </div>
 
       <p className={styles.warning}>
@@ -78,7 +78,9 @@ export function DatabaseConnectionCard({ credentials, allowDownload = true }: Da
         <ConnectionField label="Base de datos" value={credentials.dbName} />
         <ConnectionField label="Usuario" value={credentials.loginName} />
         <ConnectionField label="Contraseña" value={credentials.password} />
-        <ConnectionField label="Espacio máximo" value={`${credentials.maxStorageMB} MB`} />
+        {credentials.maxStorageMB !== undefined && (
+          <ConnectionField label="Espacio máximo" value={`${credentials.maxStorageMB} MB`} />
+        )}
       </div>
 
       {allowDownload && (
