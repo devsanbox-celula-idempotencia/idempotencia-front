@@ -12,16 +12,6 @@ export type AuthProviderName = 'google' | 'github'
 
 export type Role = 'Admin' | 'Student' | 'Developer'
 
-/** Forma exacta que devuelven /auth/register, /auth/login y (en el futuro) el callback OAuth. */
-export interface AuthResponse {
-  token: string
-  expiresAt: string
-  userId: number
-  email: string
-  fullName: string
-  role: Role
-}
-
 /** Hoy solo "SqlServer" responde 201; el resto devuelve 501 ("próximamente"). */
 export type DatabaseEngine = 'SqlServer' | 'Postgres' | 'MySql' | 'Mongo'
 
@@ -42,17 +32,39 @@ export interface DatabaseRecord {
   pausedAt: string | null
 }
 
-/** Forma de POST /databases (201) — la contraseña solo se ve esta vez, no se puede recuperar después. */
+/**
+ * Forma de POST /databases (201) y de `AuthResponse.mySqlDatabase` — la
+ * contraseña solo se ve esta vez, no se puede recuperar después.
+ * `status`/`maxStorageMB` son opcionales porque `mySqlDatabase` (aprovisionado
+ * automático en el primer login/registro por contraseña) no los incluye.
+ */
 export interface DatabaseCredentials {
   databaseId: number
   engine: DatabaseEngine
   dbName: string
-  status: DatabaseStatus
-  maxStorageMB: number
+  status?: DatabaseStatus
+  maxStorageMB?: number
   host: string
   port: number
   loginName: string
   password: string
+}
+
+/** Forma exacta que devuelven /auth/register, /auth/login y (en el futuro) el callback OAuth. */
+export interface AuthResponse {
+  token: string
+  expiresAt: string
+  userId: number
+  email: string
+  fullName: string
+  role: Role
+  /**
+   * Poblado SOLO la primera vez que un usuario se registra o inicia sesión
+   * por contraseña — el backend aprovisiona su BD MySQL automáticamente ahí.
+   * En logins posteriores (o si el aprovisionamiento falla) viene `null`.
+   * No aplica a OAuth (ver `authApi` / `pages/oauth-callback`).
+   */
+  mySqlDatabase: DatabaseCredentials | null
 }
 
 export interface PlatformStats {

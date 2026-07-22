@@ -7,6 +7,7 @@ import { CreateDatabaseForm } from '@/features/create-database'
 import type { DatabaseCredentials, DatabaseRecord } from '@/entities/database'
 import { ApiError, databaseApi } from '@/shared/api'
 import { Button } from '@/shared/ui'
+import { takePendingDatabaseReveal } from '@/shared/lib/pendingDatabaseReveal'
 import styles from './DashboardPage.module.css'
 
 export function DashboardPage() {
@@ -15,6 +16,13 @@ export function DashboardPage() {
   const [selectedId, setSelectedId] = useState<number | null>(null)
   const [isCreating, setIsCreating] = useState(false)
   const [justCreated, setJustCreated] = useState<DatabaseCredentials | null>(null)
+
+  // La BD recién aprovisionada (login/register por contraseña) queda en un
+  // puente en memoria, no en location.state — ver pendingDatabaseReveal.ts.
+  useEffect(() => {
+    const pending = takePendingDatabaseReveal()
+    if (pending) setJustCreated(pending)
+  }, [])
 
   function loadDatabases(preferredSelectedId: number | null) {
     setLoadError(null)
