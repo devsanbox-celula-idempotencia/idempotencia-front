@@ -4,9 +4,11 @@ import styles from './Input.module.css'
 interface InputProps extends InputHTMLAttributes<HTMLInputElement> {
   label: string
   error?: string
+  /** Resalta el campo como inválido sin mostrar texto propio (ej. error general del servidor que ya se muestra en otro lugar). */
+  invalid?: boolean
 }
 
-export function Input({ label, error, id, name, className, ...rest }: InputProps) {
+export function Input({ label, error, invalid, id, name, className, ...rest }: InputProps) {
   const inputId = id ?? name
 
   return (
@@ -17,7 +19,8 @@ export function Input({ label, error, id, name, className, ...rest }: InputProps
       <input
         id={inputId}
         name={name}
-        className={[styles.input, error ? styles.inputError : '', className].filter(Boolean).join(' ')}
+        aria-invalid={Boolean(error || invalid)}
+        className={[styles.input, error || invalid ? styles.inputError : '', className].filter(Boolean).join(' ')}
         {...rest}
       />
       {error && <p className={styles.error}>{error}</p>}

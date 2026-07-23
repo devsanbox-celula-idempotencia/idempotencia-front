@@ -60,11 +60,26 @@ export function usePasswordAuth(mode: 'login' | 'register') {
   const [fullName, setFullName] = useState('')
   const [fieldErrors, setFieldErrors] = useState<FieldErrors>({})
   const [generalError, setGeneralError] = useState<string | null>(null)
+  const [authFailed, setAuthFailed] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
+
+  // El backend responde 401 genérico tanto si el correo no existe como si la
+  // contraseña es incorrecta (no dice cuál), así que resaltamos ambos campos
+  // en vez de adivinar uno solo. Se limpia en cuanto el usuario vuelve a escribir.
+  function handleEmailChange(value: string) {
+    setEmail(value)
+    if (authFailed) setAuthFailed(false)
+  }
+
+  function handlePasswordChange(value: string) {
+    setPassword(value)
+    if (authFailed) setAuthFailed(false)
+  }
 
   async function handleSubmit(event: FormEvent) {
     event.preventDefault()
     setGeneralError(null)
+    setAuthFailed(false)
 
     const errors = validate(mode, { email, password, confirmPassword, fullName })
     setFieldErrors(errors)
@@ -85,6 +100,7 @@ export function usePasswordAuth(mode: 'login' | 'register') {
       navigate('/dashboard')
     } catch (error) {
       setGeneralError(error instanceof ApiError ? error.message : 'Ocurrió un error inesperado. Intenta de nuevo.')
+      if (mode === 'login' && error instanceof ApiError && error.status === 401) setAuthFailed(true)
     } finally {
       setIsSubmitting(false)
     }
@@ -92,15 +108,16 @@ export function usePasswordAuth(mode: 'login' | 'register') {
 
   return {
     email,
-    setEmail,
+    setEmail: handleEmailChange,
     password,
-    setPassword,
+    setPassword: handlePasswordChange,
     confirmPassword,
     setConfirmPassword,
     fullName,
     setFullName,
     fieldErrors,
     generalError,
+    authFailed,
     isSubmitting,
     handleSubmit,
   }
