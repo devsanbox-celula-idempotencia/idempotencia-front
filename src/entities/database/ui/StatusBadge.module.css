@@ -39,6 +39,15 @@
   background: var(--color-ink-soft);
 }
 
+.inactive {
+  background: var(--color-clay);
+  color: var(--color-ink-soft);
+  box-shadow: var(--shadow-out-sm);
+}
+.inactive .dot {
+  background: var(--color-ink-soft);
+}
+
 .error {
   background: linear-gradient(145deg, #ffc4cd, #ff8b9c);
   color: #8a1626;

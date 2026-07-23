@@ -50,6 +50,27 @@ export interface DatabaseCredentials {
   password: string
 }
 
+/**
+ * Forma de GET /databases/{id} (y de la respuesta de deactivate) — a
+ * diferencia de la lista, sí trae host/port/loginName (todo menos la
+ * contraseña, que nunca vuelve; para eso existe reset-password).
+ */
+export interface DatabaseDetail {
+  databaseId: number
+  engine: DatabaseEngine
+  dbName: string
+  status: DatabaseStatus
+  host: string
+  port: number
+  loginName: string
+  maxStorageMB: number
+  currentSizeMB: number
+  lastActivityAt: string
+  createdAt: string
+  pausedAt: string | null
+  deletedAt: string | null
+}
+
 /** Forma exacta que devuelven /auth/register, /auth/login y (en el futuro) el callback OAuth. */
 export interface AuthResponse {
   token: string

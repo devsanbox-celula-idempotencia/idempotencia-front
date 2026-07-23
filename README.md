@@ -74,6 +74,7 @@ El backend ("API Colmena") está documentado por el equipo de backend. Estado ac
 | Aprovisionamiento automático de BD MySQL en el primer registro/login por contraseña | **Real**. El backend lo crea solo y devuelve sus credenciales una única vez dentro del propio `AuthResponse` (campo `mySqlDatabase`) — el dashboard las revela ahí mismo apenas se detectan (ver `shared/lib/pendingDatabaseReveal.ts`), porque no se pueden volver a consultar después. |
 | Login/registro con Google/GitHub | **Real**. El botón redirige de verdad a `/auth/{provider}/login`; el backend redirige de vuelta a `/oauth/callback` con los datos de sesión en la query string, ruta pública implementada en `pages/oauth-callback`. A diferencia del flujo por contraseña, OAuth **no** aprovisiona ninguna base de datos automáticamente — el usuario la crea manualmente desde el dashboard, igual que cualquier base adicional. |
 | Crear/listar bases de datos (`POST /databases`, `GET /databases`) | **Real**, conectado en `shared/api/databaseApi.ts`. Los 4 motores (`SqlServer`, `Postgres`, `MySql`, `Mongo`) tienen provisioner real en el backend y están seleccionables en el formulario. `GET /databases` nunca devuelve credenciales — solo la respuesta de creación las trae, una vez. |
+| Ciclo de vida de una BD ya creada — detalle (`GET /databases/{id}`), desactivar, eliminar, restablecer contraseña | **Conectado, pero el backend advierte que hoy responde 500.** Código real en `shared/api/databaseApi.ts` y `features/manage-database/`, consumido desde el panel de detalle del dashboard. Los 4 endpoints dependen de Stored Procedures que aún no corrieron contra la base real, y `reset-password` además necesita una cuenta SMTP configurada — el propio equipo de backend pidió no integrarlos en producción hasta confirmar que ambas cosas estén listas. `GET /databases/{id}` sí devuelve `host`/`port`/`loginName` (a diferencia del listado) — solo la contraseña nunca vuelve. |
 | Métricas de la landing (usuarios, bases de datos creadas/activas, etc.) | **Mock** (`localStorage`, vía `shared/api/mock/`). El backend expone `GET /statistics`, pero es exclusivo para rol Admin y aún no está conectado. |
 
 **Variable de entorno:**
@@ -171,13 +172,14 @@ src/
 │   └── <page>/ui + index.ts
 ├── widgets/      # Bloques de UI compuestos entre páginas: site-header, platform-stats,
 │                 # database-sidebar, database-connection-card, database-usage-card
-├── features/     # Casos de uso: auth-with-password, auth-with-provider, create-database, logout
+├── features/     # Casos de uso: auth-with-password, auth-with-provider, create-database,
+│                 # manage-database, logout
 ├── entities/     # Modelos de negocio + su UI: user (sesión), database, platform-stats
 ├── shared/       # Sin lógica de negocio, reutilizable en todo el proyecto
 │   ├── api/       # authApi/databaseApi/platformStatsApi + httpClient + session-storage + mocks
 │   ├── config/    # Design tokens (colores, tipografías) de marca
 │   ├── lib/       # Helpers puros (formatDate, copyToClipboard, getInitials, downloadTextFile...)
-│   └── ui/        # Componentes de UI genéricos (Button, Input, Logo, íconos)
+│   └── ui/        # Componentes de UI genéricos (Button, Input, Logo, Toast, ConfirmDialog, íconos)
 ├── main.tsx      # Entry point de React
 └── vite-env.d.ts
 ```

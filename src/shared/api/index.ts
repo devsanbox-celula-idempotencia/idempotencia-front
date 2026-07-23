@@ -7,6 +7,7 @@ export type {
   AuthProviderName,
   AuthResponse,
   DatabaseCredentials,
+  DatabaseDetail,
   DatabaseEngine,
   DatabaseRecord,
   DatabaseStatus,

@@ -22,11 +22,6 @@ export function DatabaseUsageCard({ database }: { database: DatabaseRecord }) {
         <StatusBadge status={database.status} />
       </div>
 
-      <p className={styles.note}>
-        Las credenciales de conexión solo se muestran una vez, al momento de crear la base de datos. Si las
-        perdiste, tendrás que crear una nueva.
-      </p>
-
       <div>
         <div className={styles.meterTrack}>
           <div
