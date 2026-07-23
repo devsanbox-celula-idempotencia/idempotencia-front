@@ -18,6 +18,7 @@ export function PasswordAuthForm({ mode }: PasswordAuthFormProps) {
     setFullName,
     fieldErrors,
     generalError,
+    authFailed,
     isSubmitting,
     handleSubmit,
   } = usePasswordAuth(mode)
@@ -44,6 +45,7 @@ export function PasswordAuthForm({ mode }: PasswordAuthFormProps) {
         value={email}
         onChange={(e) => setEmail(e.target.value)}
         error={fieldErrors.email}
+        invalid={authFailed}
       />
       <Input
         label="Contraseña"
@@ -54,6 +56,7 @@ export function PasswordAuthForm({ mode }: PasswordAuthFormProps) {
         value={password}
         onChange={(e) => setPassword(e.target.value)}
         error={fieldErrors.password}
+        invalid={authFailed}
       />
       {mode === 'register' && (
         <Input
