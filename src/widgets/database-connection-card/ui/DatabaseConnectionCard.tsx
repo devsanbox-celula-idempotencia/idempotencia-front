@@ -1,12 +1,30 @@
 import { useState } from 'react'
-import type { DatabaseCredentials } from '@/entities/database'
+import type { DatabaseEngine, DatabaseStatus } from '@/entities/database'
 import { StatusBadge, getDatabaseStatusLabel } from '@/entities/database'
 import { copyToClipboard } from '@/shared/lib/copyToClipboard'
 import { downloadTextFile } from '@/shared/lib/downloadTextFile'
 import styles from './DatabaseConnectionCard.module.css'
 
+/**
+ * Estructural, no importa `DatabaseCredentials`/`DatabaseDetail` directo:
+ * ambos shapes calzan acá (la única diferencia real es que `DatabaseDetail`
+ * nunca trae `password` — el backend no la vuelve a dar tras la creación).
+ */
+interface ConnectionInfo {
+  databaseId: number
+  engine: DatabaseEngine
+  dbName: string
+  status?: DatabaseStatus
+  maxStorageMB?: number
+  host: string
+  port: number
+  loginName: string
+  password?: string
+}
+
 interface DatabaseConnectionCardProps {
-  credentials: DatabaseCredentials
+  credentials: ConnectionInfo
+  title?: string
   allowDownload?: boolean
 }
 
@@ -38,7 +56,7 @@ function ConnectionField({ label, value, wide }: FieldProps) {
   )
 }
 
-function formatCredentialsAsText(credentials: DatabaseCredentials): string {
+function formatCredentialsAsText(credentials: ConnectionInfo): string {
   return [
     'idempotencia — Credenciales de base de datos',
     '',
@@ -55,7 +73,13 @@ function formatCredentialsAsText(credentials: DatabaseCredentials): string {
   ].join('\n')
 }
 
-export function DatabaseConnectionCard({ credentials, allowDownload = true }: DatabaseConnectionCardProps) {
+export function DatabaseConnectionCard({
+  credentials,
+  title = 'Tu base de datos está lista',
+  allowDownload = true,
+}: DatabaseConnectionCardProps) {
+  const hasPassword = credentials.password !== undefined
+
   function handleDownload() {
     downloadTextFile(`${credentials.dbName}-credenciales.txt`, formatCredentialsAsText(credentials))
   }
@@ -63,13 +87,15 @@ export function DatabaseConnectionCard({ credentials, allowDownload = true }: Da
   return (
     <div className={styles.card}>
       <div className={styles.header}>
-        <h3 className={styles.title}>Tu base de datos está lista</h3>
+        <h3 className={styles.title}>{title}</h3>
         <StatusBadge status={credentials.status ?? 'Active'} />
       </div>
 
-      <p className={styles.warning}>
-        Guarda estas credenciales ahora — la contraseña no volverá a mostrarse completa desde el dashboard.
-      </p>
+      {hasPassword && (
+        <p className={styles.warning}>
+          Guarda estas credenciales ahora — la contraseña no volverá a mostrarse completa desde el dashboard.
+        </p>
+      )}
 
       <div className={styles.fields}>
         <ConnectionField label="Host" value={credentials.host} wide />
@@ -77,13 +103,13 @@ export function DatabaseConnectionCard({ credentials, allowDownload = true }: Da
         <ConnectionField label="Motor" value={credentials.engine} />
         <ConnectionField label="Base de datos" value={credentials.dbName} />
         <ConnectionField label="Usuario" value={credentials.loginName} />
-        <ConnectionField label="Contraseña" value={credentials.password} />
+        {hasPassword && <ConnectionField label="Contraseña" value={credentials.password as string} />}
         {credentials.maxStorageMB !== undefined && (
           <ConnectionField label="Espacio máximo" value={`${credentials.maxStorageMB} MB`} />
         )}
       </div>
 
-      {allowDownload && (
+      {hasPassword && allowDownload && (
         <button type="button" className={styles.downloadBtn} onClick={handleDownload}>
           Descargar credenciales (.txt)
         </button>
