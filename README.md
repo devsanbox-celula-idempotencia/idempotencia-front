@@ -73,7 +73,7 @@ El backend ("API Colmena") está documentado por el equipo de backend. Estado ac
 | Registro/login por email+password (`/auth/register`, `/auth/login`) | **Real**, conectado en `shared/api/authApi.ts`. Incluye confirmación de contraseña en el registro (solo validación de cliente). |
 | Aprovisionamiento automático de BD MySQL en el primer registro/login por contraseña | **Real**. El backend lo crea solo y devuelve sus credenciales una única vez dentro del propio `AuthResponse` (campo `mySqlDatabase`) — el dashboard las revela ahí mismo apenas se detectan (ver `shared/lib/pendingDatabaseReveal.ts`), porque no se pueden volver a consultar después. |
 | Login/registro con Google/GitHub | **Real**. El botón redirige de verdad a `/auth/{provider}/login`; el backend redirige de vuelta a `/oauth/callback` con los datos de sesión en la query string, ruta pública implementada en `pages/oauth-callback`. A diferencia del flujo por contraseña, OAuth **no** aprovisiona ninguna base de datos automáticamente — el usuario la crea manualmente desde el dashboard, igual que cualquier base adicional. |
-| Crear/listar bases de datos (`POST /databases`, `GET /databases`) | **Real**, conectado en `shared/api/databaseApi.ts`. El motor `SqlServer` está disponible hoy; `Postgres`/`MySql`/`Mongo` devuelven `501` (marcados como "Próximamente" en el selector). `GET /databases` nunca devuelve credenciales — solo la respuesta de creación las trae, una vez. |
+| Crear/listar bases de datos (`POST /databases`, `GET /databases`) | **Real**, conectado en `shared/api/databaseApi.ts`. Los 4 motores (`SqlServer`, `Postgres`, `MySql`, `Mongo`) tienen provisioner real en el backend y están seleccionables en el formulario. `GET /databases` nunca devuelve credenciales — solo la respuesta de creación las trae, una vez. |
 | Métricas de la landing (usuarios, bases de datos creadas/activas, etc.) | **Mock** (`localStorage`, vía `shared/api/mock/`). El backend expone `GET /statistics`, pero es exclusivo para rol Admin y aún no está conectado. |
 
 **Variable de entorno:**
@@ -106,18 +106,12 @@ El proyecto está encapsulado en una imagen Docker autocontenida — es la forma
 ### Levantar con Docker Compose (recomendado)
 
 ```bash
-docker compose up --build
-```
-
-Sirve el sitio en **http://localhost:8080/** por defecto. El puerto host se controla con la variable de entorno `FRONTEND_PORT` (`docker-compose.yml` la interpola como `"${FRONTEND_PORT:-8080}:80"`) — el `80` del contenedor no cambia, ahí adentro siempre escucha Nginx.
-
-Docker Compose **no** lee `.env.local` automáticamente (solo `.env`, y el proyecto no versiona uno para no pisar el que usa Vite en dev). Para que tome el `FRONTEND_PORT` de `.env.local`:
-
-```bash
 docker compose --env-file .env.local up --build
 ```
 
-Sin ese flag, o sin definir `FRONTEND_PORT` en el entorno, usa el default `8080`.
+El mapeo de puertos lo controla `FRONTEND_PORT` (formato `host:contenedor`, ej. `8080:80` — Nginx siempre escucha en el `80` de adentro del contenedor). Docker Compose **no** lee `.env.local` automáticamente (solo `.env`, y el proyecto no versiona uno para no pisar el que usa Vite en dev) — hay que pasar `--env-file .env.local` explícitamente, como en el comando de arriba.
+
+**Importante:** `docker-compose.yml` no trae un valor por defecto para `FRONTEND_PORT` ni `VITE_API_BASE_URL` — si se corre `docker compose up --build` sin `--env-file` y sin esas variables en el entorno, falla con `no port specified`. Siempre usar `--env-file .env.local` (o exportar ambas variables antes) para levantarlo.
 
 Para correrlo en background: agregar `-d`. Para bajarlo: `docker compose down`.
 
