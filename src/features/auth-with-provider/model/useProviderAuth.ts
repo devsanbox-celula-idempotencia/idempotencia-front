@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { authApi } from '@/shared/api'
 import type { AuthProviderName } from '@/shared/api'
 
@@ -9,6 +9,21 @@ import type { AuthProviderName } from '@/shared/api'
  */
 export function useProviderAuth() {
   const [loadingProvider, setLoadingProvider] = useState<AuthProviderName | null>(null)
+
+  // window.location.href es una navegación completa fuera de la SPA. Si el
+  // usuario le da "atrás" antes de completar el login (ej. desde la pantalla
+  // de consentimiento), el navegador puede restaurar esta página desde el
+  // bfcache con el estado de React congelado tal cual quedó — dejando
+  // `loadingProvider` marcado y ambos botones bloqueados para siempre, sin
+  // que ningún efecto de montaje vuelva a correr. `pageshow` con
+  // `persisted: true` es la señal de que la página volvió del bfcache.
+  useEffect(() => {
+    function handlePageShow(event: PageTransitionEvent) {
+      if (event.persisted) setLoadingProvider(null)
+    }
+    window.addEventListener('pageshow', handlePageShow)
+    return () => window.removeEventListener('pageshow', handlePageShow)
+  }, [])
 
   function continueWith(provider: AuthProviderName) {
     setLoadingProvider(provider)
