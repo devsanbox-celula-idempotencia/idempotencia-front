@@ -43,32 +43,13 @@
   font-family: inherit;
 }
 
-.engineCard:not(:disabled):hover {
+.engineCard:hover {
   box-shadow: var(--shadow-out);
 }
 
 .engineCardSelected {
   border-left-color: var(--color-accent-2);
   box-shadow: var(--shadow-in);
-}
-
-.engineCard:disabled {
-  cursor: not-allowed;
-  opacity: 0.55;
-}
-
-.comingSoon {
-  position: absolute;
-  top: 10px;
-  right: 10px;
-  font-size: 10px;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.03em;
-  color: var(--color-ink-soft);
-  background: var(--color-clay);
-  border-radius: 999px;
-  padding: 3px 8px;
 }
 
 .engineLabel {

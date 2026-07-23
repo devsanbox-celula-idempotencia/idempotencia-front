@@ -4,9 +4,9 @@ services:
       context: .
       dockerfile: Dockerfile
       args:
-        VITE_API_BASE_URL: ${VITE_API_BASE_URL:-https://api.idempotencia.andrescortes.dev}
+        VITE_API_BASE_URL: ${VITE_API_BASE_URL}
     image: idempotencia-frontend:latest
     container_name: idempotencia-frontend
     ports:
-      - "${FRONTEND_PORT:-8080}:80"
+      - "${FRONTEND_PORT}"
     restart: unless-stopped

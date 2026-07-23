@@ -12,7 +12,7 @@ export type AuthProviderName = 'google' | 'github'
 
 export type Role = 'Admin' | 'Student' | 'Developer'
 
-/** Hoy solo "SqlServer" responde 201; el resto devuelve 501 ("próximamente"). */
+/** Los 4 motores tienen provisioner real en el backend. */
 export type DatabaseEngine = 'SqlServer' | 'Postgres' | 'MySql' | 'Mongo'
 
 // `(string & {})` deja pasar cualquier valor que el backend agregue a futuro

@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import { authApi } from '@/shared/api'
 import type { AuthResponse, Role } from '@/shared/api'
@@ -17,8 +17,12 @@ export function OAuthCallbackPage() {
   const { setSession } = useSession()
   const navigate = useNavigate()
   const [error, setError] = useState<string | null>(null)
+  const hasProcessedRef = useRef(false)
 
   useEffect(() => {
+    if (hasProcessedRef.current) return
+    hasProcessedRef.current = true
+
     const backendError = searchParams.get('error')
     if (backendError) {
       setError(backendError)
@@ -48,10 +52,12 @@ export function OAuthCallbackPage() {
     }
 
     // El token y el resto de los datos viajan en la query string (limitación
-    // conocida del backend, ver guía de integración) — se limpia la URL apenas
-    // se leen para que no queden en el historial del navegador.
-    window.history.replaceState(null, '', '/oauth/callback')
-
+    // conocida del backend, ver guía de integración). No hace falta limpiar
+    // la URL a mano: `navigate(..., { replace: true })` ya reemplaza esta
+    // entrada del historial por /dashboard, así que el query string sensible
+    // nunca llega a persistir. Llamar `window.history.replaceState` aparte
+    // desincroniza el historial interno de `BrowserRouter` (no pasa por sus
+    // propios métodos) y causaba un loop de renders infinito en esta página.
     setSession(authResponse)
     authApi.recordExternalSession(authResponse)
     navigate('/dashboard', { replace: true })

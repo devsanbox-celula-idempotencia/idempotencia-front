@@ -7,14 +7,15 @@ interface EngineOption {
   engine: DatabaseEngine
   label: string
   description: string
-  available: boolean
 }
 
+// Los 4 motores tienen provisioner real en el backend (SqlServer, Postgres,
+// MySql, Mongo) — ver guía de integración de /databases.
 const ENGINE_OPTIONS: EngineOption[] = [
-  { engine: 'SqlServer', label: 'SQL Server', description: 'Motor relacional de Microsoft.', available: true },
-  { engine: 'Postgres', label: 'PostgreSQL', description: 'Motor relacional open source.', available: false },
-  { engine: 'MySql', label: 'MySQL', description: 'Motor relacional open source.', available: false },
-  { engine: 'Mongo', label: 'MongoDB', description: 'Base de datos NoSQL orientada a documentos.', available: false },
+  { engine: 'SqlServer', label: 'SQL Server', description: 'Motor relacional de Microsoft.' },
+  { engine: 'Postgres', label: 'PostgreSQL', description: 'Motor relacional open source.' },
+  { engine: 'MySql', label: 'MySQL', description: 'Motor relacional open source.' },
+  { engine: 'Mongo', label: 'MongoDB', description: 'Base de datos NoSQL orientada a documentos.' },
 ]
 
 interface CreateDatabaseFormProps {
@@ -38,11 +39,9 @@ export function CreateDatabaseForm({ onCreated, onCancel }: CreateDatabaseFormPr
           <button
             key={option.engine}
             type="button"
-            disabled={!option.available}
             className={`${styles.engineCard} ${engine === option.engine ? styles.engineCardSelected : ''}`}
             onClick={() => setEngine(option.engine)}
           >
-            {!option.available && <span className={styles.comingSoon}>Próximamente</span>}
             <span className={styles.engineLabel}>{option.label}</span>
             <span className={styles.engineDescription}>{option.description}</span>
           </button>
