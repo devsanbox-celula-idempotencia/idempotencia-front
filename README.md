@@ -109,9 +109,18 @@ El proyecto está encapsulado en una imagen Docker autocontenida — es la forma
 docker compose --env-file .env.local up --build
 ```
 
-El mapeo de puertos lo controla `FRONTEND_PORT` (formato `host:contenedor`, ej. `8080:80` — Nginx siempre escucha en el `80` de adentro del contenedor). Docker Compose **no** lee `.env.local` automáticamente (solo `.env`, y el proyecto no versiona uno para no pisar el que usa Vite en dev) — hay que pasar `--env-file .env.local` explícitamente, como en el comando de arriba.
+Variables que controla `docker-compose.yml` (todas en [`.env.example`](.env.example)):
 
-**Importante:** `docker-compose.yml` no trae un valor por defecto para `FRONTEND_PORT` ni `VITE_API_BASE_URL` — si se corre `docker compose up --build` sin `--env-file` y sin esas variables en el entorno, falla con `no port specified`. Siempre usar `--env-file .env.local` (o exportar ambas variables antes) para levantarlo.
+| Variable | Para qué |
+|---|---|
+| `FRONTEND_PORT` | Mapeo de puertos, formato `host:contenedor` (ej. `8080:80` — Nginx siempre escucha en el `80` de adentro del contenedor). |
+| `FRONTEND_IMAGE` | Nombre:tag de la imagen construida (ej. `idempotencia-frontend:latest`). |
+| `FRONTEND_CONTAINER_NAME` | Nombre del contenedor. |
+| `VITE_API_BASE_URL` | Ver [Integración con backend](#integración-con-backend) — se inyecta en build time. |
+
+Docker Compose **no** lee `.env.local` automáticamente (solo `.env`, y el proyecto no versiona uno para no pisar el que usa Vite en dev) — hay que pasar `--env-file .env.local` explícitamente, como en el comando de arriba.
+
+**Importante:** `docker-compose.yml` no trae valores por defecto para ninguna de estas cuatro variables — si se corre `docker compose up --build` sin `--env-file` y sin definirlas en el entorno, falla (`no port specified` como mínimo). Siempre usar `--env-file .env.local` (o exportarlas todas antes) para levantarlo.
 
 Para correrlo en background: agregar `-d`. Para bajarlo: `docker compose down`.
 

@@ -62,6 +62,13 @@ export async function apiFetch<T>(path: string, init: RequestInit = {}): Promise
   const contentType = response.headers.get('content-type') ?? ''
   const body = contentType.includes('application/json') ? await response.json().catch(() => null) : null
 
+  if (response.status === 429) {
+    const retryAfter = response.headers.get('Retry-After')
+    const baseMessage = extractErrorMessage(body, 'Demasiadas solicitudes.')
+    const message = retryAfter ? `${baseMessage} Intenta de nuevo en ${retryAfter}s.` : baseMessage
+    throw new ApiError(429, message)
+  }
+
   if (!response.ok) {
     throw new ApiError(response.status, extractErrorMessage(body, `Ocurrió un error (${response.status}).`))
   }

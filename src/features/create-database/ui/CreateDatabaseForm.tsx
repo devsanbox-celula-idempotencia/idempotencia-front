@@ -1,6 +1,6 @@
 import { Button, Input } from '@/shared/ui'
 import type { DatabaseCredentials, DatabaseEngine } from '@/shared/api'
-import { useCreateDatabase } from '../model/useCreateDatabase'
+import { ENGINES_WITH_CONNECTION_LIMIT, useCreateDatabase } from '../model/useCreateDatabase'
 import styles from './CreateDatabaseForm.module.css'
 
 interface EngineOption {
@@ -24,8 +24,20 @@ interface CreateDatabaseFormProps {
 }
 
 export function CreateDatabaseForm({ onCreated, onCancel }: CreateDatabaseFormProps) {
-  const { engine, setEngine, dbName, setDbName, fieldErrors, generalError, isSubmitting, handleSubmit } =
-    useCreateDatabase(onCreated)
+  const {
+    engine,
+    setEngine,
+    dbName,
+    setDbName,
+    maxConcurrentConnections,
+    setMaxConcurrentConnections,
+    fieldErrors,
+    generalError,
+    isSubmitting,
+    handleSubmit,
+  } = useCreateDatabase(onCreated)
+
+  const showConnectionLimit = engine !== null && ENGINES_WITH_CONNECTION_LIMIT.includes(engine)
 
   return (
     <form className={styles.form} onSubmit={handleSubmit} noValidate>
@@ -57,6 +69,20 @@ export function CreateDatabaseForm({ onCreated, onCancel }: CreateDatabaseFormPr
         onChange={(e) => setDbName(e.target.value)}
         error={fieldErrors.dbName}
       />
+
+      {showConnectionLimit && (
+        <Input
+          label="Conexiones concurrentes máximas (opcional)"
+          name="maxConcurrentConnections"
+          type="number"
+          min={1}
+          max={100}
+          placeholder="Por defecto 5, tope 100"
+          value={maxConcurrentConnections}
+          onChange={(e) => setMaxConcurrentConnections(e.target.value)}
+          error={fieldErrors.maxConcurrentConnections}
+        />
+      )}
 
       {generalError && <p className={styles.generalError}>{generalError}</p>}
 
