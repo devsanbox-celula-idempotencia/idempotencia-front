@@ -1,5 +1,5 @@
 services:
-  frontend:
+  frontend-QA:
     build:
       context: .
       dockerfile: Dockerfile
@@ -10,3 +10,11 @@ services:
     ports:
       - "${FRONTEND_PORT}"
     restart: unless-stopped
+    networks:
+      - red-proxy
+    mem_limit: 256m
+    cpus: 0.5
+
+networks:
+  red-proxy:
+    external: true

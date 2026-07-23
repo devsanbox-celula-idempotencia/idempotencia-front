@@ -1,5 +1,6 @@
 # idempotencia — Frontend
 
+
 Frontend de **idempotencia**, construido con **React + Vite + TypeScript** siguiendo arquitectura **Feature-Sliced Design (FSD)**.
 
 > **Estado actual:** landing con métricas de plataforma, registro/login (email+password y Google/GitHub, ambos reales contra el backend) y dashboard con gestión de bases de datos (crear, listar, ver estado/uso — también real). Ya no hay una pantalla de bienvenida separada: si el registro/login por contraseña aprovisiona automáticamente una base MySQL, sus credenciales se revelan una única vez directamente en el dashboard. Solo las métricas de la landing siguen simuladas (mock en `localStorage`) — el backend expone `GET /statistics` pero es solo para rol Admin y todavía no está conectado. Ver [Integración con backend](#integración-con-backend).
