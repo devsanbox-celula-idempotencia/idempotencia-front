@@ -2,8 +2,8 @@ import { useEffect, useState } from 'react'
 import { SiteHeader } from '@/widgets/site-header'
 import { DatabaseSidebar } from '@/widgets/database-sidebar'
 import { DatabaseConnectionCard } from '@/widgets/database-connection-card'
-import { DatabaseUsageCard } from '@/widgets/database-usage-card'
 import { CreateDatabaseForm } from '@/features/create-database'
+import { DatabaseDetailPanel } from '@/features/manage-database'
 import type { DatabaseCredentials, DatabaseRecord } from '@/entities/database'
 import { ApiError, databaseApi } from '@/shared/api'
 import { Button, Toast } from '@/shared/ui'
@@ -59,6 +59,11 @@ export function DashboardPage() {
     loadDatabases(createdId)
   }
 
+  function handleDeleted() {
+    setToastMessage('Base de datos eliminada.')
+    loadDatabases(null)
+  }
+
   const selectedDatabase = databases?.find((db) => db.databaseId === selectedId) ?? null
 
   function renderMain() {
@@ -83,9 +88,14 @@ export function DashboardPage() {
 
     if (selectedDatabase) {
       return (
-        <div className={styles.cards}>
-          <DatabaseUsageCard database={selectedDatabase} />
-        </div>
+        <DatabaseDetailPanel
+          key={selectedDatabase.databaseId}
+          databaseId={selectedDatabase.databaseId}
+          listRecord={selectedDatabase}
+          onDeactivated={() => loadDatabases(selectedDatabase.databaseId)}
+          onDeleted={handleDeleted}
+          onPasswordReset={(message) => setToastMessage(message)}
+        />
       )
     }
 
