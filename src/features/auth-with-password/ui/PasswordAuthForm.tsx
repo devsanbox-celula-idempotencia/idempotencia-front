@@ -20,6 +20,7 @@ export function PasswordAuthForm({ mode }: PasswordAuthFormProps) {
     generalError,
     authFailed,
     isSubmitting,
+    disableSubmit,
     handleSubmit,
   } = usePasswordAuth(mode)
 
@@ -30,7 +31,6 @@ export function PasswordAuthForm({ mode }: PasswordAuthFormProps) {
           label="Nombre completo"
           name="fullName"
           autoComplete="name"
-          maxLength={150}
           value={fullName}
           onChange={(e) => setFullName(e.target.value)}
           error={fieldErrors.fullName}
@@ -41,7 +41,6 @@ export function PasswordAuthForm({ mode }: PasswordAuthFormProps) {
         name="email"
         type="email"
         autoComplete="email"
-        maxLength={150}
         value={email}
         onChange={(e) => setEmail(e.target.value)}
         error={fieldErrors.email}
@@ -52,7 +51,6 @@ export function PasswordAuthForm({ mode }: PasswordAuthFormProps) {
         name="password"
         type="password"
         autoComplete={mode === 'register' ? 'new-password' : 'current-password'}
-        maxLength={12}
         value={password}
         onChange={(e) => setPassword(e.target.value)}
         error={fieldErrors.password}
@@ -64,14 +62,13 @@ export function PasswordAuthForm({ mode }: PasswordAuthFormProps) {
           name="confirmPassword"
           type="password"
           autoComplete="new-password"
-          maxLength={12}
           value={confirmPassword}
           onChange={(e) => setConfirmPassword(e.target.value)}
           error={fieldErrors.confirmPassword}
         />
       )}
       {generalError && <p className={styles.generalError}>{generalError}</p>}
-      <Button type="submit" fullWidth disabled={isSubmitting}>
+      <Button type="submit" fullWidth disabled={disableSubmit}>
         {isSubmitting ? 'Enviando…' : mode === 'login' ? 'Iniciar sesión' : 'Crear cuenta'}
       </Button>
     </form>
