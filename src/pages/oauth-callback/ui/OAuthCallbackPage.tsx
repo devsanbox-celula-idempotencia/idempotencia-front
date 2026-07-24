@@ -4,6 +4,7 @@ import { authApi } from '@/shared/api'
 import type { AuthResponse, Role } from '@/shared/api'
 import { useSession } from '@/entities/user'
 import { SiteHeader } from '@/widgets/site-header'
+import { setPendingToast } from '@/shared/lib/pendingToast'
 import styles from './OAuthCallbackPage.module.css'
 
 /**
@@ -60,6 +61,14 @@ export function OAuthCallbackPage() {
     // propios métodos) y causaba un loop de renders infinito en esta página.
     setSession(authResponse)
     authApi.recordExternalSession(authResponse)
+    // El backend aprovisiona la BD MySQL principal durante el propio callback
+    // OAuth, pero la contraseña ya no viaja por API para este flujo — la manda
+    // por correo. No hay forma de saber desde acá si este login creó la BD
+    // recién (la respuesta no trae un flag de "usuario nuevo"), así que el
+    // aviso queda redactado para ser cierto sin importar si es la primera vez.
+    setPendingToast(
+      'Si es tu primer inicio de sesión con este proveedor, te enviamos las credenciales de tu base de datos por correo.',
+    )
     navigate('/dashboard', { replace: true })
   }, [searchParams, setSession, navigate])
 

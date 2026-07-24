@@ -12,6 +12,11 @@
   color: var(--color-ink-soft);
 }
 
+.inputWrapper {
+  position: relative;
+  display: flex;
+}
+
 .input {
   font-family: var(--font-heading);
   font-size: 14px;
@@ -22,6 +27,11 @@
   box-shadow: var(--shadow-in);
   padding: 12px 14px;
   outline: none;
+  width: 100%;
+}
+
+.inputWithToggle {
+  padding-right: 42px;
 }
 
 .input:focus {
@@ -30,6 +40,25 @@
 
 .inputError {
   box-shadow: var(--shadow-in), 0 0 0 2px var(--color-error);
+}
+
+.toggleBtn {
+  position: absolute;
+  top: 50%;
+  right: 10px;
+  transform: translateY(-50%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  background: transparent;
+  color: var(--color-ink-soft);
+  cursor: pointer;
+  padding: 4px;
+}
+
+.toggleBtn:hover {
+  color: var(--color-ink);
 }
 
 .error {

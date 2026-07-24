@@ -16,6 +16,32 @@ const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 // Solo letras (incluye acentos/ñ) y espacios — sin números ni símbolos.
 const FULL_NAME_RE = /^[\p{L}\s]+$/u
 
+const MAX_LENGTHS = {
+  email: 150,
+  fullName: 150,
+  password: 12,
+  confirmPassword: 12,
+} as const
+
+const MAX_LENGTH_LABELS: Record<keyof typeof MAX_LENGTHS, string> = {
+  email: 'El correo',
+  fullName: 'El nombre',
+  password: 'La contraseña',
+  confirmPassword: 'La confirmación de contraseña',
+}
+
+/**
+ * Chequeo de longitud en vivo (on-change), separado de `validate()` (que solo
+ * corre al enviar). QA pidió que el error aparezca apenas se supera el límite
+ * al pegar texto, y desaparezca apenas se borra el sobrante — por eso los
+ * inputs ya no usan `maxLength` nativo (que trunca en silencio sin avisar).
+ */
+function maxLengthError(field: keyof typeof MAX_LENGTHS, value: string): string | undefined {
+  const limit = MAX_LENGTHS[field]
+  if (value.length > limit) return `${MAX_LENGTH_LABELS[field]} no puede superar los ${limit} caracteres.`
+  return undefined
+}
+
 /** Reglas exactas documentadas por backend para /auth/register y /auth/login. */
 function validate(
   mode: 'login' | 'register',
@@ -69,11 +95,23 @@ export function usePasswordAuth(mode: 'login' | 'register') {
   function handleEmailChange(value: string) {
     setEmail(value)
     if (authFailed) setAuthFailed(false)
+    setFieldErrors((prev) => ({ ...prev, email: maxLengthError('email', value) }))
   }
 
   function handlePasswordChange(value: string) {
     setPassword(value)
     if (authFailed) setAuthFailed(false)
+    setFieldErrors((prev) => ({ ...prev, password: maxLengthError('password', value) }))
+  }
+
+  function handleConfirmPasswordChange(value: string) {
+    setConfirmPassword(value)
+    setFieldErrors((prev) => ({ ...prev, confirmPassword: maxLengthError('confirmPassword', value) }))
+  }
+
+  function handleFullNameChange(value: string) {
+    setFullName(value)
+    setFieldErrors((prev) => ({ ...prev, fullName: maxLengthError('fullName', value) }))
   }
 
   async function handleSubmit(event: FormEvent) {
@@ -106,19 +144,25 @@ export function usePasswordAuth(mode: 'login' | 'register') {
     }
   }
 
+  // Bloquea el envío mientras algún campo esté por fuera de su límite de
+  // caracteres — el usuario ya ve el mensaje en vivo, esto es la red de
+  // seguridad para que no pueda enviar el formulario en ese estado.
+  const hasLengthErrors = Object.values(fieldErrors).some(Boolean)
+
   return {
     email,
     setEmail: handleEmailChange,
     password,
     setPassword: handlePasswordChange,
     confirmPassword,
-    setConfirmPassword,
+    setConfirmPassword: handleConfirmPasswordChange,
     fullName,
-    setFullName,
+    setFullName: handleFullNameChange,
     fieldErrors,
     generalError,
     authFailed,
     isSubmitting,
+    disableSubmit: isSubmitting || hasLengthErrors,
     handleSubmit,
   }
 }

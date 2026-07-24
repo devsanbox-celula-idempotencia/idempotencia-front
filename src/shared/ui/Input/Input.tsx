@@ -1,4 +1,6 @@
-import type { InputHTMLAttributes } from 'react'
+import { useState, type InputHTMLAttributes } from 'react'
+import { EyeIcon } from '../icons/EyeIcon'
+import { EyeOffIcon } from '../icons/EyeOffIcon'
 import styles from './Input.module.css'
 
 interface InputProps extends InputHTMLAttributes<HTMLInputElement> {
@@ -8,21 +10,43 @@ interface InputProps extends InputHTMLAttributes<HTMLInputElement> {
   invalid?: boolean
 }
 
-export function Input({ label, error, invalid, id, name, className, ...rest }: InputProps) {
+export function Input({ label, error, invalid, id, name, className, type, ...rest }: InputProps) {
   const inputId = id ?? name
+  const isPassword = type === 'password'
+  const [passwordVisible, setPasswordVisible] = useState(false)
 
   return (
     <div className={styles.field}>
       <label className={styles.label} htmlFor={inputId}>
         {label}
       </label>
-      <input
-        id={inputId}
-        name={name}
-        aria-invalid={Boolean(error || invalid)}
-        className={[styles.input, error || invalid ? styles.inputError : '', className].filter(Boolean).join(' ')}
-        {...rest}
-      />
+      <div className={styles.inputWrapper}>
+        <input
+          id={inputId}
+          name={name}
+          type={isPassword && passwordVisible ? 'text' : type}
+          aria-invalid={Boolean(error || invalid)}
+          className={[
+            styles.input,
+            isPassword ? styles.inputWithToggle : '',
+            error || invalid ? styles.inputError : '',
+            className,
+          ]
+            .filter(Boolean)
+            .join(' ')}
+          {...rest}
+        />
+        {isPassword && (
+          <button
+            type="button"
+            className={styles.toggleBtn}
+            onClick={() => setPasswordVisible((visible) => !visible)}
+            aria-label={passwordVisible ? 'Ocultar contraseña' : 'Mostrar contraseña'}
+          >
+            {passwordVisible ? <EyeOffIcon /> : <EyeIcon />}
+          </button>
+        )}
+      </div>
       {error && <p className={styles.error}>{error}</p>}
     </div>
   )
