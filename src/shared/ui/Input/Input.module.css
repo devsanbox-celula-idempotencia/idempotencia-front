@@ -42,6 +42,11 @@
   box-shadow: var(--shadow-in), 0 0 0 2px var(--color-error);
 }
 
+.input:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
 .toggleBtn {
   position: absolute;
   top: 50%;
