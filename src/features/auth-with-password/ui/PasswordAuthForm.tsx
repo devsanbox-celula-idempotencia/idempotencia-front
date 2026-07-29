@@ -1,12 +1,16 @@
+import { useEffect } from 'react'
+import { Link } from 'react-router-dom'
 import { Button, Input } from '@/shared/ui'
-import { usePasswordAuth } from '../model/usePasswordAuth'
+import { usePasswordAuth, type LoginErrorKind } from '../model/usePasswordAuth'
 import styles from './PasswordAuthForm.module.css'
 
 interface PasswordAuthFormProps {
   mode: 'login' | 'register'
+  /** Solo aplica en login: se llama con la clasificación actual del error (o null si no hay). */
+  onLoginErrorKindChange?: (kind: LoginErrorKind) => void
 }
 
-export function PasswordAuthForm({ mode }: PasswordAuthFormProps) {
+export function PasswordAuthForm({ mode, onLoginErrorKindChange }: PasswordAuthFormProps) {
   const {
     email,
     setEmail,
@@ -18,11 +22,17 @@ export function PasswordAuthForm({ mode }: PasswordAuthFormProps) {
     setFullName,
     fieldErrors,
     generalError,
-    authFailed,
+    loginErrorKind,
     isSubmitting,
     disableSubmit,
     handleSubmit,
   } = usePasswordAuth(mode)
+
+  useEffect(() => {
+    onLoginErrorKindChange?.(loginErrorKind)
+  }, [loginErrorKind, onLoginErrorKindChange])
+
+  const isOAuthAccount = loginErrorKind === 'oauth-account'
 
   return (
     <form className={styles.form} onSubmit={handleSubmit} noValidate>
@@ -44,7 +54,7 @@ export function PasswordAuthForm({ mode }: PasswordAuthFormProps) {
         value={email}
         onChange={(e) => setEmail(e.target.value)}
         error={fieldErrors.email}
-        invalid={authFailed}
+        invalid={loginErrorKind === 'not-found'}
       />
       <Input
         label="Contraseña"
@@ -54,7 +64,8 @@ export function PasswordAuthForm({ mode }: PasswordAuthFormProps) {
         value={password}
         onChange={(e) => setPassword(e.target.value)}
         error={fieldErrors.password}
-        invalid={authFailed}
+        invalid={loginErrorKind === 'wrong-password'}
+        disabled={isOAuthAccount}
       />
       {mode === 'register' && (
         <Input
@@ -68,7 +79,15 @@ export function PasswordAuthForm({ mode }: PasswordAuthFormProps) {
         />
       )}
       {generalError && <p className={styles.generalError}>{generalError}</p>}
-      <Button type="submit" fullWidth disabled={disableSubmit}>
+      {loginErrorKind === 'not-found' && (
+        <p className={styles.errorAction}>
+          <Link to="/register">Crea una cuenta</Link> con ese correo.
+        </p>
+      )}
+      {isOAuthAccount && (
+        <p className={styles.errorAction}>Usa el botón de Google o GitHub correspondiente, más abajo.</p>
+      )}
+      <Button type="submit" fullWidth disabled={disableSubmit || isOAuthAccount}>
         {isSubmitting ? 'Enviando…' : mode === 'login' ? 'Iniciar sesión' : 'Crear cuenta'}
       </Button>
     </form>

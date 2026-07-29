@@ -46,6 +46,14 @@
 
 .buttons {
   width: 100%;
+  border-radius: var(--radius-lg);
+  transition: box-shadow 0.2s ease;
+}
+
+.buttonsHighlighted {
+  box-shadow: 0 0 0 2px var(--color-accent-2);
+  padding: 6px;
+  margin: -6px;
 }
 
 .divider {
