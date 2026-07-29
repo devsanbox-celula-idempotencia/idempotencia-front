@@ -19,8 +19,13 @@ const CONFIRM_CONTENT: Record<
 > = {
   deactivate: {
     title: 'Desactivar base de datos',
-    message: 'Esto desconectará tu base de datos. No hay forma de reactivarla desde aquí. ¿Quieres continuar?',
+    message: 'Esto desconectará tu base de datos hasta que la reactives. ¿Quieres continuar?',
     confirmLabel: 'Desactivar',
+  },
+  reactivate: {
+    title: 'Reactivar base de datos',
+    message: 'Esto vuelve a dejar tu base de datos disponible para conectarte. ¿Quieres continuar?',
+    confirmLabel: 'Reactivar',
   },
   delete: {
     title: 'Eliminar base de datos',
@@ -78,22 +83,34 @@ export function DatabaseDetailPanel({
       <DatabaseUsageCard database={listRecord} />
 
       <div className={styles.actions}>
-        {status === 'Active' && (
-          <Button variant="secondary" onClick={() => requestAction('deactivate')}>
-            Desactivar base de datos
-          </Button>
-        )}
+        <div className={styles.dangerZone}>
+          {status === 'Active' && (
+            <Button variant="secondary" className={styles.deactivateBtn} onClick={() => requestAction('deactivate')}>
+              Desactivar base de datos
+            </Button>
+          )}
+          {status === 'Inactive' && (
+            <Button variant="secondary" className={styles.reactivateBtn} onClick={() => requestAction('reactivate')}>
+              Reactivar base de datos
+            </Button>
+          )}
+          <div className={styles.deleteRow}>
+            <Button
+              variant="secondary"
+              className={status === 'Inactive' ? styles.deleteBtn : undefined}
+              disabled={status !== 'Inactive'}
+              onClick={() => requestAction('delete')}
+            >
+              Eliminar base de datos
+            </Button>
+            {status !== 'Inactive' && <p className={styles.helper}>Desactívala primero para poder eliminarla.</p>}
+          </div>
+        </div>
         {status === 'Active' && (
           <Button variant="ghost" onClick={() => requestAction('reset')}>
             ¿Olvidaste tu contraseña? Restablecer
           </Button>
         )}
-        <div className={styles.deleteRow}>
-          <Button variant="secondary" disabled={status !== 'Inactive'} onClick={() => requestAction('delete')}>
-            Eliminar base de datos
-          </Button>
-          {status !== 'Inactive' && <p className={styles.helper}>Desactívala primero para poder eliminarla.</p>}
-        </div>
       </div>
 
       {pendingAction && (
