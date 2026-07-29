@@ -153,7 +153,9 @@ export function usePasswordAuth(mode: 'login' | 'register') {
       setSession(authResponse)
       if (authResponse.mySqlDatabase) setPendingDatabaseReveal(authResponse.mySqlDatabase)
       if (mode === 'register') setPendingToast('Registro exitoso.')
-      navigate('/dashboard')
+      // replace: true evita que /login o /register queden en el historial
+      // detrás de /dashboard — así "atrás" no puede volver a mostrarlos.
+      navigate('/dashboard', { replace: true })
     } catch (error) {
       const message = error instanceof ApiError ? error.message : 'Ocurrió un error inesperado. Intenta de nuevo.'
       setGeneralError(message)

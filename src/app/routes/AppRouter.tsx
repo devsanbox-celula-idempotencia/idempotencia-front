@@ -10,10 +10,10 @@ import { RequireGuest } from './RequireGuest'
 export function AppRouter() {
   return (
     <Routes>
-      <Route path="/" element={<LandingPage />} />
       <Route path="/oauth/callback" element={<OAuthCallbackPage />} />
 
       <Route element={<RequireGuest />}>
+        <Route path="/" element={<LandingPage />} />
         <Route path="/login" element={<LoginPage />} />
         <Route path="/register" element={<RegisterPage />} />
       </Route>
