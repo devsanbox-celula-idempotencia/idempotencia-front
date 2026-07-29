@@ -64,6 +64,13 @@ export function DashboardPage() {
     loadDatabases(null)
   }
 
+  function handleReactivated(databaseId: number) {
+    // El backend fue explícito: la contraseña no cambia al reactivar, así
+    // que el mensaje lo aclara para que nadie asuma que hace falta una nueva.
+    setToastMessage('Base de datos reactivada. Usa las mismas credenciales de antes.')
+    loadDatabases(databaseId)
+  }
+
   const selectedDatabase = databases?.find((db) => db.databaseId === selectedId) ?? null
 
   function renderMain() {
@@ -93,6 +100,7 @@ export function DashboardPage() {
           databaseId={selectedDatabase.databaseId}
           listRecord={selectedDatabase}
           onDeactivated={() => loadDatabases(selectedDatabase.databaseId)}
+          onReactivated={() => handleReactivated(selectedDatabase.databaseId)}
           onDeleted={handleDeleted}
           onPasswordReset={(message) => setToastMessage(message)}
         />

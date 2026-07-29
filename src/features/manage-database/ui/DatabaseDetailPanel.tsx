@@ -9,6 +9,7 @@ interface DatabaseDetailPanelProps {
   databaseId: number
   listRecord: DatabaseRecord
   onDeactivated: () => void
+  onReactivated: () => void
   onDeleted: () => void
   onPasswordReset: (message: string) => void
 }
@@ -17,9 +18,12 @@ const CONFIRM_CONTENT: Record<
   Exclude<PendingAction, null>,
   { title: string; message: string; confirmLabel: string; danger?: boolean }
 > = {
+  // Tono ligero a propósito: desactivar es un toggle reversible (pausar/
+  // reanudar), no una acción destructiva — el backend pidió reservar el
+  // modal "fuerte" solo para eliminar, que sí es irreversible.
   deactivate: {
-    title: 'Desactivar base de datos',
-    message: 'Esto desconectará tu base de datos hasta que la reactives. ¿Quieres continuar?',
+    title: 'Pausar base de datos',
+    message: 'Tu base de datos dejará de aceptar conexiones. Puedes reactivarla cuando quieras y no perderás datos.',
     confirmLabel: 'Desactivar',
   },
   reactivate: {
@@ -45,6 +49,7 @@ export function DatabaseDetailPanel({
   databaseId,
   listRecord,
   onDeactivated,
+  onReactivated,
   onDeleted,
   onPasswordReset,
 }: DatabaseDetailPanelProps) {
@@ -59,7 +64,7 @@ export function DatabaseDetailPanel({
     requestAction,
     cancelPendingAction,
     confirmPendingAction,
-  } = useManageDatabase(databaseId, { onDeactivated, onDeleted, onPasswordReset })
+  } = useManageDatabase(databaseId, { onDeactivated, onReactivated, onDeleted, onPasswordReset })
 
   const status = detail?.status ?? listRecord.status
 
@@ -82,36 +87,46 @@ export function DatabaseDetailPanel({
 
       <DatabaseUsageCard database={listRecord} />
 
-      <div className={styles.actions}>
-        <div className={styles.dangerZone}>
-          {status === 'Active' && (
-            <Button variant="secondary" className={styles.deactivateBtn} onClick={() => requestAction('deactivate')}>
-              Desactivar base de datos
-            </Button>
-          )}
-          {status === 'Inactive' && (
-            <Button variant="secondary" className={styles.reactivateBtn} onClick={() => requestAction('reactivate')}>
-              Reactivar base de datos
-            </Button>
-          )}
-          <div className={styles.deleteRow}>
-            <Button
-              variant="secondary"
-              className={status === 'Inactive' ? styles.deleteBtn : undefined}
-              disabled={status !== 'Inactive'}
-              onClick={() => requestAction('delete')}
-            >
-              Eliminar base de datos
-            </Button>
-            {status !== 'Inactive' && <p className={styles.helper}>Desactívala primero para poder eliminarla.</p>}
+      {status !== 'Deleted' && (
+        <div className={styles.actions}>
+          <div className={styles.dangerZone}>
+            {status === 'Active' && (
+              <Button
+                variant="secondary"
+                className={styles.deactivateBtn}
+                onClick={() => requestAction('deactivate')}
+              >
+                Desactivar base de datos
+              </Button>
+            )}
+            {status === 'Inactive' && (
+              <Button
+                variant="secondary"
+                className={styles.reactivateBtn}
+                onClick={() => requestAction('reactivate')}
+              >
+                Reactivar base de datos
+              </Button>
+            )}
+            <div className={styles.deleteRow}>
+              <Button
+                variant="secondary"
+                className={status === 'Inactive' ? styles.deleteBtn : undefined}
+                disabled={status !== 'Inactive'}
+                onClick={() => requestAction('delete')}
+              >
+                Eliminar base de datos
+              </Button>
+              {status !== 'Inactive' && <p className={styles.helper}>Desactívala primero para poder eliminarla.</p>}
+            </div>
           </div>
+          {status === 'Active' && (
+            <Button variant="ghost" onClick={() => requestAction('reset')}>
+              ¿Olvidaste tu contraseña? Restablecer
+            </Button>
+          )}
         </div>
-        {status === 'Active' && (
-          <Button variant="ghost" onClick={() => requestAction('reset')}>
-            ¿Olvidaste tu contraseña? Restablecer
-          </Button>
-        )}
-      </div>
+      )}
 
       {pendingAction && (
         <ConfirmDialog
