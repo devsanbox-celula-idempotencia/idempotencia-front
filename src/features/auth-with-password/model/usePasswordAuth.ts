@@ -42,6 +42,25 @@ function maxLengthError(field: keyof typeof MAX_LENGTHS, value: string): string 
   return undefined
 }
 
+export type LoginErrorKind = 'not-found' | 'oauth-account' | 'wrong-password' | 'inactive' | null
+
+/**
+ * El 401 de /auth/login ya no es un mensaje único genérico: backend confirmó
+ * (2026-07-28) que `error` ahora trae uno de cuatro textos distintos según la
+ * causa real. Clasificamos por fragmento estable (no por el string completo)
+ * porque backend mismo avisó que compararlo entero rompe en silencio apenas
+ * ajusten la redacción — con `includes()` sobrevive a esos cambios de copy.
+ * Cualquier mensaje que no matchee (429, 500, etc.) cae en `null` y se
+ * muestra tal cual vino, sin intentar reclasificarlo.
+ */
+function classifyLoginError(message: string): LoginErrorKind {
+  if (message.includes('No existe una cuenta')) return 'not-found'
+  if (message.includes('proveedor externo')) return 'oauth-account'
+  if (message.includes('contraseña es incorrecta')) return 'wrong-password'
+  if (message.includes('cuenta está inactiva')) return 'inactive'
+  return null
+}
+
 /** Reglas exactas documentadas por backend para /auth/register y /auth/login. */
 function validate(
   mode: 'login' | 'register',
@@ -86,21 +105,20 @@ export function usePasswordAuth(mode: 'login' | 'register') {
   const [fullName, setFullName] = useState('')
   const [fieldErrors, setFieldErrors] = useState<FieldErrors>({})
   const [generalError, setGeneralError] = useState<string | null>(null)
-  const [authFailed, setAuthFailed] = useState(false)
+  const [loginErrorKind, setLoginErrorKind] = useState<LoginErrorKind>(null)
   const [isSubmitting, setIsSubmitting] = useState(false)
 
-  // El backend responde 401 genérico tanto si el correo no existe como si la
-  // contraseña es incorrecta (no dice cuál), así que resaltamos ambos campos
-  // en vez de adivinar uno solo. Se limpia en cuanto el usuario vuelve a escribir.
+  // Se limpia la clasificación del error de login en cuanto el usuario vuelve
+  // a escribir cualquiera de los dos campos — ya no aplica a lo que hay ahora.
   function handleEmailChange(value: string) {
     setEmail(value)
-    if (authFailed) setAuthFailed(false)
+    if (loginErrorKind) setLoginErrorKind(null)
     setFieldErrors((prev) => ({ ...prev, email: maxLengthError('email', value) }))
   }
 
   function handlePasswordChange(value: string) {
     setPassword(value)
-    if (authFailed) setAuthFailed(false)
+    if (loginErrorKind) setLoginErrorKind(null)
     setFieldErrors((prev) => ({ ...prev, password: maxLengthError('password', value) }))
   }
 
@@ -117,7 +135,7 @@ export function usePasswordAuth(mode: 'login' | 'register') {
   async function handleSubmit(event: FormEvent) {
     event.preventDefault()
     setGeneralError(null)
-    setAuthFailed(false)
+    setLoginErrorKind(null)
 
     const errors = validate(mode, { email, password, confirmPassword, fullName })
     setFieldErrors(errors)
@@ -137,8 +155,11 @@ export function usePasswordAuth(mode: 'login' | 'register') {
       if (mode === 'register') setPendingToast('Registro exitoso.')
       navigate('/dashboard')
     } catch (error) {
-      setGeneralError(error instanceof ApiError ? error.message : 'Ocurrió un error inesperado. Intenta de nuevo.')
-      if (mode === 'login' && error instanceof ApiError && error.status === 401) setAuthFailed(true)
+      const message = error instanceof ApiError ? error.message : 'Ocurrió un error inesperado. Intenta de nuevo.'
+      setGeneralError(message)
+      if (mode === 'login' && error instanceof ApiError && error.status === 401) {
+        setLoginErrorKind(classifyLoginError(message))
+      }
     } finally {
       setIsSubmitting(false)
     }
@@ -160,7 +181,7 @@ export function usePasswordAuth(mode: 'login' | 'register') {
     setFullName: handleFullNameChange,
     fieldErrors,
     generalError,
-    authFailed,
+    loginErrorKind,
     isSubmitting,
     disableSubmit: isSubmitting || hasLengthErrors,
     handleSubmit,

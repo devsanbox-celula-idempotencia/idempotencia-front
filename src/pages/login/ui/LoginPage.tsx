@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { SiteHeader } from '@/widgets/site-header'
 import { ProviderAuthButtons } from '@/features/auth-with-provider'
@@ -6,6 +7,8 @@ import { resetMockData } from '@/shared/api'
 import styles from './LoginPage.module.css'
 
 export function LoginPage() {
+  const [highlightOAuth, setHighlightOAuth] = useState(false)
+
   function handleResetDemoData() {
     resetMockData()
     window.location.href = '/'
@@ -20,11 +23,14 @@ export function LoginPage() {
           <h1 className={styles.title}>Inicia sesión en tu cuenta</h1>
           <p className={styles.subtitle}>Accede con tu correo y contraseña, o con el proveedor que usaste antes.</p>
 
-          <PasswordAuthForm mode="login" />
+          <PasswordAuthForm
+            mode="login"
+            onLoginErrorKindChange={(kind) => setHighlightOAuth(kind === 'oauth-account')}
+          />
 
           <div className={styles.divider}>o continúa con</div>
 
-          <div className={styles.buttons}>
+          <div className={[styles.buttons, highlightOAuth ? styles.buttonsHighlighted : ''].join(' ')}>
             <ProviderAuthButtons mode="login" />
           </div>
 
