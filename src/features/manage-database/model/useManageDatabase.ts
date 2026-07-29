@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import { ApiError, databaseApi } from '@/shared/api'
 import type { DatabaseDetail } from '@/entities/database'
 
-export type PendingAction = 'deactivate' | 'delete' | 'reset' | null
+export type PendingAction = 'deactivate' | 'delete' | 'reset' | 'reactivate' | null
 
 interface ManageDatabaseCallbacks {
   onDeactivated: () => void
@@ -64,10 +64,20 @@ export function useManageDatabase(databaseId: number, callbacks: ManageDatabaseC
         await databaseApi.deleteDatabase(databaseId)
         setPendingAction(null)
         callbacks.onDeleted()
-      } else {
+      } else if (pendingAction === 'reset') {
         const result = await databaseApi.resetDatabasePassword(databaseId)
         setPendingAction(null)
         callbacks.onPasswordReset(result.message)
+      } else {
+        // 'reactivate': backend todavía no comparte el endpoint (solo existen
+        // deactivate/delete/reset-password hoy). El botón y todo el flujo de
+        // confirmación ya quedan armados — cuando llegue la ruta real, este
+        // `throw` se reemplaza por un `await databaseApi.reactivateDatabase(...)`
+        // igual que los otros tres casos, sin tocar nada más.
+        throw new ApiError(
+          501,
+          'Esta función todavía no está disponible: el backend no ha compartido el endpoint para reactivar bases de datos.',
+        )
       }
     } catch (error) {
       setActionError(errorMessage(error))
