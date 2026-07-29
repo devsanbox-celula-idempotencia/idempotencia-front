@@ -6,6 +6,7 @@ export type PendingAction = 'deactivate' | 'delete' | 'reset' | 'reactivate' | n
 
 interface ManageDatabaseCallbacks {
   onDeactivated: () => void
+  onReactivated: () => void
   onDeleted: () => void
   onPasswordReset: (message: string) => void
 }
@@ -56,28 +57,26 @@ export function useManageDatabase(databaseId: number, callbacks: ManageDatabaseC
     setActionError(null)
     try {
       if (pendingAction === 'deactivate') {
-        const result = await databaseApi.deactivateDatabase(databaseId)
-        setDetail(result)
+        await databaseApi.deactivateDatabase(databaseId)
         setPendingAction(null)
+        // Se relee desde GET en vez de confiar en el body de la propia
+        // respuesta — el backend pidió tratar el status como eventualmente
+        // consistente en vez de optimista.
+        loadDetail()
         callbacks.onDeactivated()
+      } else if (pendingAction === 'reactivate') {
+        await databaseApi.reactivateDatabase(databaseId)
+        setPendingAction(null)
+        loadDetail()
+        callbacks.onReactivated()
       } else if (pendingAction === 'delete') {
         await databaseApi.deleteDatabase(databaseId)
         setPendingAction(null)
         callbacks.onDeleted()
-      } else if (pendingAction === 'reset') {
+      } else {
         const result = await databaseApi.resetDatabasePassword(databaseId)
         setPendingAction(null)
         callbacks.onPasswordReset(result.message)
-      } else {
-        // 'reactivate': backend todavía no comparte el endpoint (solo existen
-        // deactivate/delete/reset-password hoy). El botón y todo el flujo de
-        // confirmación ya quedan armados — cuando llegue la ruta real, este
-        // `throw` se reemplaza por un `await databaseApi.reactivateDatabase(...)`
-        // igual que los otros tres casos, sin tocar nada más.
-        throw new ApiError(
-          501,
-          'Esta función todavía no está disponible: el backend no ha compartido el endpoint para reactivar bases de datos.',
-        )
       }
     } catch (error) {
       setActionError(errorMessage(error))

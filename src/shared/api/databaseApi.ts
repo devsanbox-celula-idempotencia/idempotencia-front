@@ -31,6 +31,15 @@ export async function deactivateDatabase(databaseId: number): Promise<DatabaseDe
   return apiFetch<DatabaseDetail>(`/databases/${databaseId}/deactivate`, { method: 'POST' })
 }
 
+/**
+ * POST /databases/{id}/reactivate — sin body. La contraseña NO cambia (el
+ * motor solo vuelve a habilitar el login), solo válido desde status
+ * "Inactive". Es idempotente: reintentar tras un fallo es seguro.
+ */
+export async function reactivateDatabase(databaseId: number): Promise<DatabaseDetail> {
+  return apiFetch<DatabaseDetail>(`/databases/${databaseId}/reactivate`, { method: 'POST' })
+}
+
 /** DELETE /databases/{id} — borrado físico real e irreversible. Solo si status === "Inactive". */
 export async function deleteDatabase(databaseId: number): Promise<void> {
   await apiFetch<void>(`/databases/${databaseId}`, { method: 'DELETE' })
