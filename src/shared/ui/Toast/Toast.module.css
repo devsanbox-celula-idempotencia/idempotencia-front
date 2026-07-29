@@ -1,0 +1,50 @@
+.toast {
+  position: fixed;
+  top: 88px;
+  right: 24px;
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 14px 16px;
+  border-radius: var(--radius-md);
+  background: linear-gradient(145deg, #c9f3dd, #a9ebc7);
+  color: #1d7a4c;
+  box-shadow: var(--shadow-out);
+  font-family: var(--font-heading);
+  font-weight: 600;
+  font-size: 14px;
+  max-width: 360px;
+}
+
+.dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--color-success);
+  flex: none;
+}
+
+.message {
+  flex: 1;
+}
+
+.closeBtn {
+  border: none;
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+  font-size: 18px;
+  line-height: 1;
+  padding: 0;
+  flex: none;
+}
+
+@media (max-width: 480px) {
+  .toast {
+    left: 16px;
+    right: 16px;
+    top: 76px;
+    max-width: none;
+  }
+}

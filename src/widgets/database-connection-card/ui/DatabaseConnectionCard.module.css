@@ -1,0 +1,105 @@
+.card {
+  background: var(--color-clay);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-out);
+  padding: 32px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.title {
+  font-size: 20px;
+}
+
+.fields {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  background: var(--color-bg);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-in);
+  padding: 12px 14px;
+}
+
+.fieldWide {
+  grid-column: 1 / -1;
+}
+
+.fieldLabel {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--color-ink-soft);
+}
+
+.fieldValueRow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.fieldValue {
+  font-family: var(--font-mono);
+  font-size: 13px;
+  color: var(--color-ink);
+  overflow-wrap: anywhere;
+  flex: 1;
+}
+
+.iconBtn {
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  color: var(--color-ink-soft);
+  font-size: 12px;
+  font-family: var(--font-heading);
+  font-weight: 600;
+  padding: 2px 6px;
+  flex: none;
+}
+
+.iconBtn:hover {
+  color: var(--color-accent-2);
+}
+
+.warning {
+  font-size: 13px;
+  color: #8a5a12;
+  background: linear-gradient(145deg, #ffe3ba, #ffd28d);
+  border-radius: var(--radius-md);
+  padding: 10px 14px;
+  margin: 0;
+}
+
+.downloadBtn {
+  align-self: flex-start;
+  border: none;
+  cursor: pointer;
+  background: var(--color-bg);
+  box-shadow: var(--shadow-out-sm);
+  color: var(--color-ink);
+  font-family: var(--font-heading);
+  font-weight: 600;
+  font-size: 13px;
+  border-radius: var(--radius-md);
+  padding: 10px 18px;
+}
+
+.downloadBtn:hover {
+  color: var(--color-accent-2);
+}

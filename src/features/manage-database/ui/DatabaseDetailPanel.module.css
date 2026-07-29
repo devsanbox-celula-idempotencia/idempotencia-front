@@ -1,0 +1,69 @@
+.panel {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.loading {
+  color: var(--color-ink-soft);
+  padding: 20px 0;
+  text-align: center;
+}
+
+.connectionError {
+  background: var(--color-clay);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-out);
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 12px;
+  color: var(--color-ink-soft);
+  font-size: 14px;
+}
+
+.actions {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 12px;
+}
+
+.dangerZone {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  gap: 12px;
+}
+
+.deleteRow {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.helper {
+  color: var(--color-ink-soft);
+  font-size: 12px;
+  margin: 0;
+}
+
+/* Colores propios para que se distingan del resto de botones "secondary"
+   (grises) del dashboard — naranja para una acción reversible-ish pero con
+   consecuencias, rojo para la irreversible. Mismo truco que ya usa
+   ConfirmDialog (`!important` sobre el gradiente de `.secondary`). */
+.deactivateBtn {
+  background: linear-gradient(145deg, #ffb37a, #ff9142) !important;
+  color: #fff !important;
+}
+
+.reactivateBtn {
+  background: linear-gradient(145deg, #7fe0b4, #5fcf9a) !important;
+  color: #fff !important;
+}
+
+.deleteBtn {
+  background: linear-gradient(145deg, #ff8b9c, #ff5c72) !important;
+  color: #fff !important;
+}

@@ -1,6 +1,11 @@
-import { LandingPage } from '@/pages/landing'
+import { AppProviders } from './providers/AppProviders'
+import { AppRouter } from './routes/AppRouter'
 import './styles/global.css'
 
 export function App() {
-  return <LandingPage />
+  return (
+    <AppProviders>
+      <AppRouter />
+    </AppProviders>
+  )
 }

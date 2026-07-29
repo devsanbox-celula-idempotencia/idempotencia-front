@@ -1,11 +1,12 @@
 # idempotencia — Frontend
 
+
 Frontend de **idempotencia**, construido con **React + Vite + TypeScript** siguiendo arquitectura **Feature-Sliced Design (FSD)**.
 
-> **Estado actual:** landing page provisional ("Estamos trabajando para usted"). Es un placeholder mientras se desarrolla el producto — no requiere backend, API keys ni variables de entorno.
+> **Estado actual:** landing con métricas de plataforma, registro/login (email+password y Google/GitHub, ambos reales contra el backend) y dashboard con gestión de bases de datos (crear, listar, ver estado/uso — también real). Ya no hay una pantalla de bienvenida separada: si el registro/login por contraseña aprovisiona automáticamente una base MySQL, sus credenciales se revelan una única vez directamente en el dashboard. Solo las métricas de la landing siguen simuladas (mock en `localStorage`) — el backend expone `GET /statistics` pero es solo para rol Admin y todavía no está conectado. Ver [Integración con backend](#integración-con-backend).
 
 - **Dominio de destino:** `idempotencia.andrescortes.dev`
-- **Tipo de sitio:** SPA estática (sin SSR, sin backend)
+- **Tipo de sitio:** SPA estática (sin SSR) que consume un backend externo para autenticación
 
 ---
 
@@ -14,7 +15,7 @@ Frontend de **idempotencia**, construido con **React + Vite + TypeScript** sigui
 - **Node.js** ≥ 18 (recomendado 20 LTS o superior)
 - **npm** ≥ 9 (viene con Node)
 
-No se requiere ninguna otra herramienta, base de datos ni variable de entorno para este estado del proyecto.
+No se requiere ninguna base de datos local. Para autenticación por email/password el proyecto pega contra el backend real (ver [Integración con backend](#integración-con-backend)) — no hace falta nada adicional para levantarlo en local, ya trae un valor por defecto.
 
 ---
 
@@ -24,7 +25,10 @@ No se requiere ninguna otra herramienta, base de datos ni variable de entorno pa
 # 1. Instalar dependencias
 npm install
 
-# 2. Levantar el servidor de desarrollo
+# 2. (opcional) copiar el archivo de variables de entorno
+cp .env.example .env.local
+
+# 3. Levantar el servidor de desarrollo
 npm run dev
 ```
 
@@ -60,6 +64,31 @@ npm run preview
 
 ---
 
+## Integración con backend
+
+El backend ("API Colmena") está documentado por el equipo de backend. Estado actual de cada pieza:
+
+| Flujo | Estado |
+|---|---|
+| Registro/login por email+password (`/auth/register`, `/auth/login`) | **Real**, conectado en `shared/api/authApi.ts`. Incluye confirmación de contraseña en el registro (solo validación de cliente). |
+| Aprovisionamiento automático de BD MySQL en el primer registro/login por contraseña | **Real**. El backend lo crea solo y devuelve sus credenciales una única vez dentro del propio `AuthResponse` (campo `mySqlDatabase`) — el dashboard las revela ahí mismo apenas se detectan (ver `shared/lib/pendingDatabaseReveal.ts`), porque no se pueden volver a consultar después. |
+| Login/registro con Google/GitHub | **Real**. El botón redirige de verdad a `/auth/{provider}/login`; el backend redirige de vuelta a `/oauth/callback` con los datos de sesión en la query string, ruta pública implementada en `pages/oauth-callback`. Desde que el backend lo confirmó, OAuth **también** aprovisiona la BD MySQL principal automáticamente durante el propio callback — pero, a diferencia del flujo por contraseña, la contraseña de esa BD nunca viaja por API para este flujo: el backend la manda por correo. El callback no puede revelarla en pantalla (no está en la query string ni hay forma de saber si este login la creó recién), así que en vez de eso muestra un aviso (vía el mismo puente de `pendingToast` que ya se usaba para el registro) pidiendo revisar el correo. Si el usuario lo pierde, existe `POST /databases/{id}/reset-password`. |
+| Crear/listar bases de datos (`POST /databases`, `GET /databases`) | **Real**, conectado en `shared/api/databaseApi.ts`. Los 4 motores (`SqlServer`, `Postgres`, `MySql`, `Mongo`) tienen provisioner real en el backend y están seleccionables en el formulario. `GET /databases` nunca devuelve credenciales — solo la respuesta de creación las trae, una vez. |
+| Ciclo de vida de una BD ya creada — detalle (`GET /databases/{id}`), desactivar, reactivar, eliminar, restablecer contraseña | **Conectado, pero el backend advierte que hoy responde 500 en QA.** Código real en `shared/api/databaseApi.ts` y `features/manage-database/`, consumido desde el panel de detalle del dashboard. `deactivate`/`reactivate`/`delete`/`reset-password` dependen de Stored Procedures que aún no corrieron contra QA (`deactivate` además tiene un bug conocido, `CK_ProvDb_Status`, que impide llegar a `Inactive` para poder probar `reactivate` — hay que correr `sql/2026-07-29-reactivate.sql` y desplegar backend primero), y `reset-password` además necesita una cuenta SMTP configurada. `GET /databases/{id}` sí devuelve `host`/`port`/`loginName` (a diferencia del listado) — solo la contraseña nunca vuelve. Reactivar **no** cambia la contraseña (el mensaje de éxito lo aclara explícitamente); solo un botón a la vez según `status` (`Active` → Desactivar, `Inactive` → Reactivar, `Deleted` → ninguno), y tras cualquier acción se relee `GET /databases/{id}` en vez de asumir el status optimista. |
+| Métricas de la landing (usuarios, bases de datos creadas/activas, etc.) | **Mock** (`localStorage`, vía `shared/api/mock/`). El backend expone `GET /statistics`, pero es exclusivo para rol Admin y aún no está conectado. |
+
+**Variable de entorno:**
+
+```
+VITE_API_BASE_URL=https://api.idempotencia.andrescortes.dev
+```
+
+Ver [`.env.example`](.env.example). Si no se define, el proyecto usa ese mismo valor por defecto (hardcodeado en `shared/api/config.ts`). Debe inyectarse en **build time** (convención `VITE_*` de Vite): en Docker vía `--build-arg`/`ARG` en el `Dockerfile` (ver sección de Docker), en local vía `.env.local`.
+
+Para pruebas contra un backend corriendo en local, `.env.local` puede apuntar a `http://localhost:5175` (login/registro por contraseña funcionan por HTTP). El flujo OAuth necesita HTTPS del lado del backend (`https://localhost:7113` en desarrollo) — con el backend en HTTP, los botones de Google/GitHub no van a completar el login.
+
+---
+
 ## Docker
 
 El proyecto está encapsulado en una imagen Docker autocontenida — es la forma recomendada de desplegarlo. No requiere Node instalado en el host, solo Docker.
@@ -78,12 +107,23 @@ El proyecto está encapsulado en una imagen Docker autocontenida — es la forma
 ### Levantar con Docker Compose (recomendado)
 
 ```bash
-docker compose up --build
+docker compose --env-file .env.local up --build
 ```
 
-Sirve el sitio en **http://localhost:8080/**. El puerto expuesto está definido en `docker-compose.yml` (`8080:80`) y se puede ajustar ahí según el entorno de destino.
+Variables que controla `docker-compose.yml` (todas en [`.env.example`](.env.example)):
 
-Para correrlo en background: `docker compose up --build -d`. Para bajarlo: `docker compose down`.
+| Variable | Para qué |
+|---|---|
+| `FRONTEND_PORT` | Mapeo de puertos, formato `host:contenedor` (ej. `8080:80` — Nginx siempre escucha en el `80` de adentro del contenedor). |
+| `FRONTEND_IMAGE` | Nombre:tag de la imagen construida (ej. `idempotencia-frontend:latest`). |
+| `FRONTEND_CONTAINER_NAME` | Nombre del contenedor. |
+| `VITE_API_BASE_URL` | Ver [Integración con backend](#integración-con-backend) — se inyecta en build time. |
+
+Docker Compose **no** lee `.env.local` automáticamente (solo `.env`, y el proyecto no versiona uno para no pisar el que usa Vite en dev) — hay que pasar `--env-file .env.local` explícitamente, como en el comando de arriba.
+
+**Importante:** `docker-compose.yml` no trae valores por defecto para ninguna de estas cuatro variables — si se corre `docker compose up --build` sin `--env-file` y sin definirlas en el entorno, falla (`no port specified` como mínimo). Siempre usar `--env-file .env.local` (o exportarlas todas antes) para levantarlo.
+
+Para correrlo en background: agregar `-d`. Para bajarlo: `docker compose down`.
 
 ### Levantar con Docker a mano
 
@@ -96,7 +136,11 @@ docker run --rm -p 8080:80 idempotencia-frontend
 
 - No hace falta `npm install` ni Node en el runner de CI — solo `docker build`. El `Dockerfile` resuelve todo internamente.
 - La imagen expone el puerto **80** (Nginx). Mapear al puerto que exponga el hosting/orquestador destino.
-- **Variables de entorno:** ninguna en este momento. Si se agregan en el futuro, deben inyectarse en **build time** (prefijo `VITE_`, convención de Vite) vía `docker build --build-arg` o `ARG`/`ENV` en el `Dockerfile` — no en runtime, porque el resultado ya es HTML/JS estático servido por Nginx.
+- **Variables de entorno:** `VITE_API_BASE_URL` (ver [Integración con backend](#integración-con-backend)). Se inyecta en **build time** vía `--build-arg`:
+  ```bash
+  docker build --build-arg VITE_API_BASE_URL=https://api.idempotencia.andrescortes.dev -t idempotencia-frontend .
+  ```
+  Ya trae ese mismo valor por defecto si no se pasa el `--build-arg` — no en runtime, porque el resultado ya es HTML/JS estático servido por Nginx.
 - El `.dockerignore` excluye `node_modules`, `dist`, `.git` y demás archivos que no deben viajar al contexto de build, para builds más rápidos y una imagen más liviana.
 
 ---
@@ -110,7 +154,7 @@ docker run --rm -p 8080:80 idempotencia-frontend
 2. **Publicar** la imagen en el registry que corresponda (ECR, GHCR, Docker Hub privado, etc.) y desplegarla en el orquestador/hosting elegido (Kubernetes, ECS, un VPS con `docker compose`, etc.), exponiendo el puerto **80** del contenedor.
 3. **Dominio:** apuntar `idempotencia.andrescortes.dev` al servicio/loadbalancer que enruta al contenedor. El sitio se sirve desde la raíz del dominio (no requiere subpath ni `base` especial en `vite.config.ts`).
 4. **HTTPS:** el contenedor solo sirve HTTP en el puerto 80; la terminación TLS debe hacerse en la capa delante (loadbalancer, reverse proxy o Cloudflare) apuntando al dominio final.
-5. **Variables de entorno:** no hay ninguna en este momento — ver la nota de build-time en la sección de Docker si se agregan más adelante.
+5. **Variables de entorno:** `VITE_API_BASE_URL` — ver la nota de build-time en la sección de Docker.
 
 Alternativa sin Docker (build local con Node, sirviendo `dist/` como estático en cualquier hosting): ver [Build de producción](#build-de-producción) más arriba.
 
@@ -120,20 +164,22 @@ Alternativa sin Docker (build local con Node, sirviendo `dist/` como estático e
 
 ```
 src/
-├── app/          # Inicialización de la app: composición raíz, estilos globales, providers
-│   ├── App.tsx
-│   └── styles/global.css
-├── pages/        # Páginas completas, componen widgets/features/entities
-│   └── landing/
-│       ├── ui/LandingPage.tsx
-│       └── index.ts        # API pública del slice
-├── widgets/      # Bloques de UI compuestos y reutilizables entre páginas (aún vacío)
-├── features/     # Casos de uso con interacción del usuario (aún vacío)
-├── entities/     # Modelos de negocio y su UI asociada (aún vacío)
-├── shared/       # Código sin lógica de negocio, reutilizable en todo el proyecto
-│   ├── assets/    # Imágenes, gifs, etc.
+├── app/          # Inicialización: composición raíz, providers (sesión, router), estilos globales
+│   ├── providers/
+│   ├── routes/    # AppRouter + guards (RequireAuth, RequireGuest)
+│   └── App.tsx
+├── pages/        # Páginas completas: landing, login, register, oauth-callback, dashboard
+│   └── <page>/ui + index.ts
+├── widgets/      # Bloques de UI compuestos entre páginas: site-header, platform-stats,
+│                 # database-sidebar, database-connection-card, database-usage-card
+├── features/     # Casos de uso: auth-with-password, auth-with-provider, create-database,
+│                 # manage-database, logout
+├── entities/     # Modelos de negocio + su UI: user (sesión), database, platform-stats
+├── shared/       # Sin lógica de negocio, reutilizable en todo el proyecto
+│   ├── api/       # authApi/databaseApi/platformStatsApi + httpClient + session-storage + mocks
 │   ├── config/    # Design tokens (colores, tipografías) de marca
-│   └── ui/        # Componentes de UI genéricos (aún vacío)
+│   ├── lib/       # Helpers puros (formatDate, copyToClipboard, getInitials, downloadTextFile...)
+│   └── ui/        # Componentes de UI genéricos (Button, Input, Logo, Toast, ConfirmDialog, íconos)
 ├── main.tsx      # Entry point de React
 └── vite-env.d.ts
 ```
@@ -144,9 +190,7 @@ src/
 shared → entities → features → widgets → pages → app
 ```
 
-Cada slice expone su API pública a través de un `index.ts` (ver `src/pages/landing/index.ts`); el resto del código importa desde ahí, nunca desde archivos internos del slice.
-
-Las carpetas `widgets/`, `features/` y `entities/` están vacías (con un `.gitkeep`) porque la landing actual no las necesita todavía — quedan listas para cuando se agregue funcionalidad real.
+Cada slice expone su API pública a través de un `index.ts` (ej. `src/entities/database/index.ts`); el resto del código importa desde ahí, nunca desde archivos internos del slice.
 
 ---
 
