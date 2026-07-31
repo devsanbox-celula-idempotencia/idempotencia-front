@@ -20,6 +20,10 @@ interface ConnectionInfo {
   port: number
   loginName: string
   password?: string
+  /** Trae la contraseña embebida — igual de sensible, solo viene junto con `password`. */
+  connectionUri?: string
+  /** `null` en Mongo (no aplica) — la fila se oculta en ese caso, nunca se muestra "null". */
+  jdbcUrl?: string | null
 }
 
 interface DatabaseConnectionCardProps {
@@ -66,6 +70,8 @@ function formatCredentialsAsText(credentials: ConnectionInfo): string {
     `Base de datos: ${credentials.dbName}`,
     `Usuario: ${credentials.loginName}`,
     `Contraseña: ${credentials.password}`,
+    ...(credentials.connectionUri ? [`Connection URI: ${credentials.connectionUri}`] : []),
+    ...(credentials.jdbcUrl ? [`JDBC URL: ${credentials.jdbcUrl}`] : []),
     `Estado: ${getDatabaseStatusLabel(credentials.status ?? 'Active')}`,
     ...(credentials.maxStorageMB !== undefined ? [`Espacio máximo: ${credentials.maxStorageMB} MB`] : []),
     '',
@@ -104,6 +110,10 @@ export function DatabaseConnectionCard({
         <ConnectionField label="Base de datos" value={credentials.dbName} />
         <ConnectionField label="Usuario" value={credentials.loginName} />
         {hasPassword && <ConnectionField label="Contraseña" value={credentials.password as string} />}
+        {credentials.connectionUri && (
+          <ConnectionField label="Connection URI" value={credentials.connectionUri} wide />
+        )}
+        {credentials.jdbcUrl && <ConnectionField label="JDBC URL" value={credentials.jdbcUrl} wide />}
         {credentials.maxStorageMB !== undefined && (
           <ConnectionField label="Espacio máximo" value={`${credentials.maxStorageMB} MB`} />
         )}
