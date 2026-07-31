@@ -31,8 +31,16 @@ export function readStoredSession(): AuthResponse | null {
   return session
 }
 
+/**
+ * `mySqlDatabase` nunca se persiste: trae `password`/`connectionUri`, tan
+ * sensibles como la contraseña de la cuenta, y de todos modos el dashboard
+ * ya las consume una sola vez desde el puente en memoria
+ * (`pendingDatabaseReveal.ts`) antes de llegar acá — no hace falta guardarlas
+ * de nuevo en localStorage, donde quedarían indefinidamente hasta el logout.
+ */
 export function writeStoredSession(session: AuthResponse): void {
-  localStorage.setItem(SESSION_STORAGE_KEY, JSON.stringify(session))
+  const toPersist: AuthResponse = { ...session, mySqlDatabase: null }
+  localStorage.setItem(SESSION_STORAGE_KEY, JSON.stringify(toPersist))
 }
 
 export function clearStoredSession(): void {
