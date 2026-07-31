@@ -3,12 +3,12 @@ export function Logo({ size = 28 }: { size?: number }) {
     <svg width={size} height={size} viewBox="0 0 72 72" aria-hidden="true">
       <defs>
         <linearGradient id="idm-logo-bar-a" x1="0" y1="0" x2="1" y2="1">
-          <stop offset="0" stopColor="#ff9d8c" />
-          <stop offset="1" stopColor="#ff6b52" />
+          <stop offset="0" stopColor="#6fda9c" />
+          <stop offset="1" stopColor="#22c55e" />
         </linearGradient>
         <linearGradient id="idm-logo-bar-b" x1="0" y1="0" x2="1" y2="1">
-          <stop offset="0" stopColor="#a89bff" />
-          <stop offset="1" stopColor="#7a68f2" />
+          <stop offset="0" stopColor="#16a34a" />
+          <stop offset="1" stopColor="#14532d" />
         </linearGradient>
       </defs>
       <rect x="6" y="12" width="60" height="13" rx="6.5" fill="url(#idm-logo-bar-a)" />

@@ -1,4 +1,5 @@
 import { useState, type InputHTMLAttributes } from 'react'
+import { AnimatePresence, motion } from 'framer-motion'
 import { EyeIcon } from '../icons/EyeIcon'
 import { EyeOffIcon } from '../icons/EyeOffIcon'
 import styles from './Input.module.css'
@@ -47,7 +48,14 @@ export function Input({ label, error, invalid, id, name, className, type, ...res
           </button>
         )}
       </div>
-      {error && <p className={styles.error}>{error}</p>}
+      {/* Solo opacity, nunca height — la regla del rebrand es no animar layout. */}
+      <AnimatePresence>
+        {error && (
+          <motion.p className={styles.error} initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
+            {error}
+          </motion.p>
+        )}
+      </AnimatePresence>
     </div>
   )
 }

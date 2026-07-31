@@ -1,51 +1,59 @@
 .overlay {
   position: fixed;
   inset: 0;
-  background: rgba(58, 54, 96, 0.35);
+  background: rgba(0, 0, 0, 0.6);
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 24px;
+  padding: var(--space-6);
   z-index: 1100;
 }
 
 .dialog {
-  background: var(--color-clay);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
   border-radius: var(--radius-lg);
-  box-shadow: var(--shadow-out);
-  padding: 28px;
+  box-shadow: var(--shadow-lg);
+  padding: var(--space-8);
   max-width: 420px;
   width: 100%;
   display: flex;
   flex-direction: column;
-  gap: 14px;
+  gap: var(--space-4);
 }
 
 .title {
-  font-size: 19px;
+  font-size: var(--text-lg);
+  font-weight: var(--font-weight-bold);
+  color: var(--color-text);
   margin: 0;
 }
 
 .message {
-  color: var(--color-ink-soft);
-  font-size: 14px;
-  line-height: 1.5;
+  color: var(--color-text-soft);
+  font-size: var(--text-sm);
+  line-height: var(--leading-normal);
   margin: 0;
 }
 
 .error {
   color: var(--color-error);
-  font-size: 13px;
+  font-size: var(--text-sm);
   margin: 0;
 }
 
 .actions {
   display: flex;
   justify-content: flex-end;
-  gap: 12px;
-  margin-top: 8px;
+  gap: var(--space-3);
+  margin-top: var(--space-2);
 }
 
+/*
+  Texto oscuro, no blanco: en modo oscuro --color-error es un rojo claro
+  (#F87171) — texto blanco encima da ~2.8:1, no pasa AA. Oscuro da ~7.6:1.
+*/
 .dangerBtn {
-  background: linear-gradient(145deg, #ff8b9c, #ff5c72) !important;
+  background: var(--color-error) !important;
+  color: var(--color-on-accent) !important;
 }

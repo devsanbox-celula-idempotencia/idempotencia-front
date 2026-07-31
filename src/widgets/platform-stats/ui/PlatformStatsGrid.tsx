@@ -1,6 +1,13 @@
+import { motion } from 'framer-motion'
 import type { PlatformStats } from '@/entities/platform-stats'
+import { fadeInUp } from '@/shared/lib/motion'
 import { usePlatformStats } from '../model/usePlatformStats'
 import styles from './PlatformStatsGrid.module.css'
+
+const gridContainer = {
+  initial: {},
+  animate: { transition: { staggerChildren: 0.05 } },
+}
 
 const compactNumber = new Intl.NumberFormat('es-CO', { notation: 'compact', maximumFractionDigits: 1 })
 
@@ -53,16 +60,22 @@ export function PlatformStatsGrid() {
   }
 
   return (
-    <div className={styles.grid}>
+    <motion.div
+      className={styles.grid}
+      initial="initial"
+      whileInView="animate"
+      viewport={{ once: true, amount: 0.3 }}
+      variants={gridContainer}
+    >
       {buildTiles(stats).map((tile) => (
-        <div key={tile.label} className={styles.tile}>
+        <motion.div key={tile.label} className={styles.tile} variants={fadeInUp}>
           <span className={styles.label}>{tile.label}</span>
           <span className={styles.valueRow}>
             {tile.showStatusDot && <span className={styles.dot} />}
             <span className={styles.value}>{tile.value}</span>
           </span>
-        </div>
+        </motion.div>
       ))}
-    </div>
+    </motion.div>
   )
 }
