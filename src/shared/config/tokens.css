@@ -1,30 +1,188 @@
 /*
-  Design tokens — idempotencia brand, v2 (claymorphism).
-  Sourced from the Branding.dc.html design doc: soft pastel surfaces,
-  puffy neumorphic shadows, Baloo 2 for UI/headings, JetBrains Mono for
-  technical/code content.
+  Design tokens — idempotencia brand, v3 (rebrand: negro + verde).
+  Reemplaza el sistema claymorphism v2. Referencia de tono/ejecución: Vercel,
+  Supabase, Railway — superficies planas, bordes finos, sombras multicapa
+  suaves, acentos de color usados con criterio.
+
+  Todos los pares texto/fondo marcados "AA" fueron verificados a mano contra
+  WCAG 2.1 AA (4.5:1 texto normal, 3:1 texto grande/componentes UI). El verde
+  base (#22C55E) es lo bastante brillante para leerse sobre negro casi puro,
+  pero NO alcanza AA como texto sobre blanco — por eso el tema claro usa una
+  variante más oscura (--color-accent-text) para texto/enlaces, reservando el
+  verde base para fondos de botón, íconos y bordes.
 */
+
 :root {
-  --color-bg: #eef0fb;
-  --color-clay: #f4f2fc;
-  --color-ink: #3a3660;
-  --color-ink-soft: #6a6690;
-  --color-accent: #ff7a63;
-  --color-accent-2: #8c7bf6;
-  --color-success: #5fcf9a;
-  --color-warning: #ffc069;
-  --color-error: #ff5c72;
+  /* ---------------------------------------------------------------------
+     Paleta cruda (no consumir directo desde componentes — son la materia
+     prima de los tokens semánticos de abajo, que sí son los que se usan).
+     Escala neutra con tinte verde muy sutil (G ligeramente por encima de R/B).
+     --------------------------------------------------------------------- */
+  --palette-neutral-950: #0a0d0b;
+  --palette-neutral-900: #11150f;
+  --palette-neutral-800: #1b211c;
+  --palette-neutral-700: #2a322b;
+  --palette-neutral-600: #3d473e;
+  --palette-neutral-500: #566255;
+  --palette-neutral-400: #7c8a7b;
+  --palette-neutral-300: #a6b3a4;
+  --palette-neutral-200: #cbd5c9;
+  --palette-neutral-100: #e7ede5;
+  --palette-neutral-50: #f5f8f4;
 
-  --shadow-out: 10px 10px 22px rgba(150, 140, 200, 0.35),
-    -10px -10px 22px rgba(255, 255, 255, 0.9);
-  --shadow-out-sm: 6px 6px 14px rgba(150, 140, 200, 0.32),
-    -6px -6px 14px rgba(255, 255, 255, 0.9);
-  --shadow-in: inset 4px 4px 8px rgba(150, 140, 200, 0.28),
-    inset -4px -4px 8px rgba(255, 255, 255, 0.85);
+  --palette-accent-50: #eafbf0;
+  --palette-accent-100: #d2f5de;
+  --palette-accent-200: #a6eabf;
+  --palette-accent-300: #6fda9c;
+  --palette-accent-400: #4ade80;
+  --palette-accent-500: #22c55e;
+  --palette-accent-600: #16a34a;
+  --palette-accent-700: #15803d;
+  --palette-accent-800: #14532d;
 
-  --font-heading: 'Baloo 2', system-ui, sans-serif;
-  --font-mono: 'JetBrains Mono', ui-monospace, monospace;
+  --palette-error-400: #f87171;
+  --palette-error-500: #ef4444;
+  --palette-error-600: #dc2626;
 
-  --radius-lg: 28px;
-  --radius-md: 20px;
+  --palette-warning-400: #fbbf24;
+  --palette-warning-500: #f59e0b;
+  --palette-warning-700: #b45309;
+
+  --palette-info-400: #38bdf8;
+  --palette-info-500: #0ea5e9;
+  --palette-info-700: #0369a1;
+
+  /* ---------------------------------------------------------------------
+     Tipografía. Inter reemplaza a Baloo 2 (demasiado "juguetón" para el
+     tono producto/dev-tool buscado); JetBrains Mono se mantiene para datos
+     técnicos (credenciales, connection strings, etc.)
+     --------------------------------------------------------------------- */
+  --font-sans: 'Inter', system-ui, -apple-system, sans-serif;
+  --font-mono: 'JetBrains Mono', ui-monospace, SFMono-Regular, monospace;
+
+  --font-weight-regular: 400;
+  --font-weight-medium: 500;
+  --font-weight-semibold: 600;
+  --font-weight-bold: 700;
+
+  /* Escala ~1.25 (major third), redondeada a píxeles limpios. */
+  --text-xs: 0.75rem; /* 12px */
+  --text-sm: 0.875rem; /* 14px */
+  --text-base: 1rem; /* 16px */
+  --text-md: 1.125rem; /* 18px */
+  --text-lg: 1.25rem; /* 20px */
+  --text-xl: 1.5rem; /* 24px */
+  --text-2xl: 1.875rem; /* 30px */
+  --text-3xl: 2.25rem; /* 36px */
+  --text-4xl: 3rem; /* 48px */
+
+  --leading-tight: 1.2;
+  --leading-normal: 1.5;
+  --leading-relaxed: 1.65;
+
+  /* ---------------------------------------------------------------------
+     Espaciado — malla de 8px (con paso de 4px para ajustes finos).
+     --------------------------------------------------------------------- */
+  --space-1: 0.25rem; /* 4px */
+  --space-2: 0.5rem; /* 8px */
+  --space-3: 0.75rem; /* 12px */
+  --space-4: 1rem; /* 16px */
+  --space-5: 1.25rem; /* 20px */
+  --space-6: 1.5rem; /* 24px */
+  --space-8: 2rem; /* 32px */
+  --space-10: 2.5rem; /* 40px */
+  --space-12: 3rem; /* 48px */
+  --space-16: 4rem; /* 64px */
+  --space-20: 5rem; /* 80px */
+  --space-24: 6rem; /* 96px */
+
+  /* Radios más chicos que el v2 (28px) — la estética plana usa curvas discretas. */
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --radius-lg: 16px;
+  --radius-xl: 24px;
+  --radius-full: 999px;
+
+  /* Motion — ver Fase 4. Definido ya para que no haya valores mágicos sueltos. */
+  --motion-fast: 150ms;
+  --motion-base: 200ms;
+  --motion-slow: 250ms;
+  --motion-ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+  --motion-ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);
+}
+
+/* =========================================================================
+   Tema oscuro (default — la marca es "negro + verde" primero, claro es la
+   alternativa). Aplica tanto a :root sin atributo (antes de que el
+   ThemeProvider de la Fase 3 monte) como a [data-theme="dark"] explícito.
+   ========================================================================= */
+:root,
+[data-theme='dark'] {
+  --color-bg: var(--palette-neutral-950);
+  --color-surface: var(--palette-neutral-900);
+  --color-surface-2: var(--palette-neutral-800);
+
+  --color-border: rgba(255, 255, 255, 0.08);
+  --color-border-strong: rgba(255, 255, 255, 0.16);
+
+  --color-text: var(--palette-neutral-50);
+  --color-text-soft: var(--palette-neutral-300);
+  --color-text-faint: var(--palette-neutral-500);
+
+  /* Verde base: fondos de botón/badge, íconos, bordes — contraste 8.5:1 sobre
+     --color-bg, pasa AA incluso como texto acá, pero ver nota de arriba. */
+  --color-accent: var(--palette-accent-500);
+  --color-accent-hover: var(--palette-accent-400);
+  --color-accent-active: var(--palette-accent-600);
+  /* Texto/enlaces en verde: más brillante todavía, para máxima legibilidad. */
+  --color-accent-text: var(--palette-accent-400);
+  /* Texto sobre un fondo --color-accent (botones primarios) — oscuro, no blanco: contraste 9.2:1. */
+  --color-on-accent: #04120a;
+  --color-accent-muted-bg: rgba(74, 222, 128, 0.12);
+  --color-accent-muted-text: var(--palette-accent-400);
+
+  --color-success-text: var(--palette-accent-400);
+  --color-warning: var(--palette-warning-400);
+  --color-error: var(--palette-error-400);
+  --color-info: var(--palette-info-400);
+
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(34, 197, 94, 0.04);
+  --shadow-md: 0 8px 24px rgba(0, 0, 0, 0.45), 0 2px 6px rgba(0, 0, 0, 0.3);
+  --shadow-lg: 0 20px 48px rgba(0, 0, 0, 0.5), 0 8px 16px rgba(0, 0, 0, 0.35);
+  --shadow-glow-accent: 0 0 0 1px rgba(34, 197, 94, 0.5), 0 0 32px rgba(34, 197, 94, 0.28);
+}
+
+/* =========================================================================
+   Tema claro.
+   ========================================================================= */
+[data-theme='light'] {
+  --color-bg: var(--palette-neutral-50);
+  --color-surface: #ffffff;
+  --color-surface-2: var(--palette-neutral-100);
+
+  --color-border: rgba(10, 13, 11, 0.1);
+  --color-border-strong: rgba(10, 13, 11, 0.18);
+
+  --color-text: var(--palette-neutral-950);
+  --color-text-soft: var(--palette-neutral-600);
+  --color-text-faint: var(--palette-neutral-400);
+
+  --color-accent: var(--palette-accent-500);
+  --color-accent-hover: var(--palette-accent-600);
+  --color-accent-active: var(--palette-accent-700);
+  /* Verde AA-seguro como texto sobre blanco (4.7:1) — el 500 base falla acá (2.1:1). */
+  --color-accent-text: var(--palette-accent-700);
+  --color-on-accent: #04120a;
+  --color-accent-muted-bg: var(--palette-accent-50);
+  --color-accent-muted-text: var(--palette-accent-700);
+
+  --color-success-text: var(--palette-accent-700);
+  --color-warning: var(--palette-warning-700);
+  --color-error: var(--palette-error-600);
+  --color-info: var(--palette-info-700);
+
+  --shadow-sm: 0 1px 2px rgba(10, 13, 11, 0.06), 0 1px 1px rgba(10, 13, 11, 0.04);
+  --shadow-md: 0 8px 24px rgba(10, 13, 11, 0.1), 0 2px 6px rgba(10, 13, 11, 0.06);
+  --shadow-lg: 0 20px 48px rgba(10, 13, 11, 0.14), 0 8px 16px rgba(10, 13, 11, 0.08);
+  --shadow-glow-accent: 0 0 0 1px rgba(34, 197, 94, 0.35), 0 0 24px rgba(34, 197, 94, 0.18);
 }

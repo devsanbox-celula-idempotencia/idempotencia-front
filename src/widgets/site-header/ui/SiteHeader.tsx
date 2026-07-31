@@ -1,12 +1,13 @@
-import { Link } from 'react-router-dom'
+import { Link, useLocation } from 'react-router-dom'
 import { useSession } from '@/entities/user'
 import { LogoutButton } from '@/features/logout'
-import { Logo } from '@/shared/ui'
+import { Logo, ThemeToggle } from '@/shared/ui'
 import { getInitials } from '@/shared/lib/getInitials'
 import styles from './SiteHeader.module.css'
 
 export function SiteHeader() {
   const { user, isAuthenticated } = useSession()
+  const location = useLocation()
 
   return (
     <header className={styles.header}>
@@ -26,14 +27,22 @@ export function SiteHeader() {
           </>
         ) : (
           <>
-            <Link to="/login" className={styles.navLink}>
-              Iniciar sesión
-            </Link>
-            <Link to="/register" className={styles.navLink}>
-              Registrarme
-            </Link>
+            {/* No mostrar el link a la página en la que ya estás — antes
+                aparecían "Iniciar sesión" y "Registrarme" incluso estando
+                en /login o /register. */}
+            {location.pathname !== '/login' && (
+              <Link to="/login" className={styles.navLink}>
+                Iniciar sesión
+              </Link>
+            )}
+            {location.pathname !== '/register' && (
+              <Link to="/register" className={styles.navLink}>
+                Registrarme
+              </Link>
+            )}
           </>
         )}
+        <ThemeToggle />
       </div>
     </header>
   )

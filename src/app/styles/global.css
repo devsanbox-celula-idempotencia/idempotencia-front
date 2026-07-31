@@ -15,15 +15,19 @@ body,
 body {
   margin: 0;
   background: var(--color-bg);
-  color: var(--color-ink);
-  font-family: var(--font-heading);
+  color: var(--color-text);
+  font-family: var(--font-sans);
+  /* Transición suave al cambiar de tema — el toggle no debe sentirse como un corte seco. */
+  transition:
+    background-color var(--motion-base) var(--motion-ease-out),
+    color var(--motion-base) var(--motion-ease-out);
 }
 
 h1,
 h2,
 h3 {
-  font-family: var(--font-heading);
-  font-weight: 700;
+  font-family: var(--font-sans);
+  font-weight: var(--font-weight-bold);
   letter-spacing: -0.01em;
   margin: 0;
 }
