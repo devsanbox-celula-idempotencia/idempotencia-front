@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { AnimatePresence } from 'framer-motion'
 import { SiteHeader } from '@/widgets/site-header'
 import { DatabaseSidebar } from '@/widgets/database-sidebar'
 import { DatabaseConnectionCard } from '@/widgets/database-connection-card'
@@ -130,7 +131,9 @@ export function DashboardPage() {
 
   return (
     <div className={styles.page}>
-      {toastMessage && <Toast message={toastMessage} onDismiss={() => setToastMessage(null)} />}
+      <AnimatePresence>
+        {toastMessage && <Toast key="dashboard-toast" message={toastMessage} onDismiss={() => setToastMessage(null)} />}
+      </AnimatePresence>
       <SiteHeader />
       <main className={styles.content}>
         <div>

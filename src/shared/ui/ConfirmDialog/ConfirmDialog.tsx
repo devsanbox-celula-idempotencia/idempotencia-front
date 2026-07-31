@@ -1,3 +1,4 @@
+import { motion } from 'framer-motion'
 import { Button } from '../Button/Button'
 import styles from './ConfirmDialog.module.css'
 
@@ -13,6 +14,7 @@ interface ConfirmDialogProps {
   errorMessage?: string | null
 }
 
+/** El padre debe envolver el render condicional en <AnimatePresence> para que la salida anime. */
 export function ConfirmDialog({
   title,
   message,
@@ -25,13 +27,23 @@ export function ConfirmDialog({
   errorMessage,
 }: ConfirmDialogProps) {
   return (
-    <div className={styles.overlay} role="presentation" onClick={onCancel}>
-      <div
+    <motion.div
+      className={styles.overlay}
+      role="presentation"
+      onClick={onCancel}
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+    >
+      <motion.div
         className={styles.dialog}
         role="alertdialog"
         aria-modal="true"
         aria-labelledby="confirm-dialog-title"
         onClick={(event) => event.stopPropagation()}
+        initial={{ opacity: 0, scale: 0.96, y: 8 }}
+        animate={{ opacity: 1, scale: 1, y: 0 }}
+        exit={{ opacity: 0, scale: 0.96, y: 8 }}
       >
         <h2 id="confirm-dialog-title" className={styles.title}>
           {title}
@@ -52,7 +64,7 @@ export function ConfirmDialog({
             {isSubmitting ? 'Procesando…' : confirmLabel}
           </Button>
         </div>
-      </div>
-    </div>
+      </motion.div>
+    </motion.div>
   )
 }
