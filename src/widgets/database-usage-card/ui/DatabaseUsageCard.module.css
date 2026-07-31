@@ -1,79 +1,82 @@
 .card {
-  background: var(--color-clay);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
   border-radius: var(--radius-lg);
-  box-shadow: var(--shadow-out);
-  padding: 32px;
+  box-shadow: var(--shadow-md);
+  padding: var(--space-8);
   display: flex;
   flex-direction: column;
-  gap: 20px;
+  gap: var(--space-5);
 }
 
 .header {
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
-  gap: 12px;
+  gap: var(--space-3);
 }
 
 .title {
-  font-size: 20px;
+  font-size: var(--text-xl);
+  font-weight: var(--font-weight-semibold);
   font-family: var(--font-mono);
+  color: var(--color-text);
 }
 
 .engine {
-  font-size: 13px;
-  color: var(--color-ink-soft);
+  font-size: var(--text-sm);
+  color: var(--color-text-soft);
   margin: 2px 0 0;
 }
 
 .meterTrack {
-  height: 14px;
-  border-radius: 999px;
-  background: var(--color-bg);
-  box-shadow: var(--shadow-in);
+  height: 12px;
+  border-radius: var(--radius-full);
+  background: var(--color-surface-2);
+  border: 1px solid var(--color-border);
   overflow: hidden;
 }
 
 .meterFill {
   height: 100%;
-  border-radius: 999px;
-  transition: width 0.4s ease;
+  border-radius: var(--radius-full);
+  transition: width var(--motion-slow) var(--motion-ease-out);
 }
 
 .meterOk {
-  background: linear-gradient(90deg, #7fe0b4, #5fcf9a);
+  background: var(--color-accent);
 }
 .meterWarning {
-  background: linear-gradient(90deg, #ffd28d, #ffc069);
+  background: var(--color-warning);
 }
 .meterDanger {
-  background: linear-gradient(90deg, #ff8b9c, #ff5c72);
+  background: var(--color-error);
 }
 
 .meterCaption {
   display: flex;
   justify-content: space-between;
-  font-size: 13px;
-  color: var(--color-ink-soft);
+  font-size: var(--text-sm);
+  color: var(--color-text-soft);
 }
 
 .meterCaption strong {
-  color: var(--color-ink);
+  color: var(--color-text);
   font-family: var(--font-mono);
-  font-weight: 500;
+  font-weight: var(--font-weight-medium);
 }
 
 .metaRow {
   display: flex;
   justify-content: space-between;
-  gap: 12px;
-  font-size: 13px;
-  color: var(--color-ink-soft);
-  border-top: 1px solid rgba(58, 54, 96, 0.1);
-  padding-top: 14px;
+  gap: var(--space-3);
+  font-size: var(--text-sm);
+  color: var(--color-text-soft);
+  border-top: 1px solid var(--color-border);
+  padding-top: var(--space-4);
 }
 
 .metaRow strong {
-  color: var(--color-ink);
-  font-weight: 600;
+  color: var(--color-text);
+  font-weight: var(--font-weight-semibold);
 }
