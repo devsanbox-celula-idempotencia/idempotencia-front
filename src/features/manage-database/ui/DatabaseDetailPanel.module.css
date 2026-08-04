@@ -1,69 +1,76 @@
 .panel {
   display: flex;
   flex-direction: column;
-  gap: 20px;
+  gap: var(--space-5);
 }
 
 .loading {
-  color: var(--color-ink-soft);
-  padding: 20px 0;
+  color: var(--color-text-soft);
+  padding: var(--space-5) 0;
   text-align: center;
 }
 
 .connectionError {
-  background: var(--color-clay);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
   border-radius: var(--radius-lg);
-  box-shadow: var(--shadow-out);
-  padding: 20px;
+  box-shadow: var(--shadow-md);
+  padding: var(--space-5);
   display: flex;
   flex-direction: column;
   align-items: flex-start;
-  gap: 12px;
-  color: var(--color-ink-soft);
-  font-size: 14px;
+  gap: var(--space-3);
+  color: var(--color-text-soft);
+  font-size: var(--text-sm);
 }
 
 .actions {
   display: flex;
   flex-direction: column;
   align-items: flex-start;
-  gap: 12px;
+  gap: var(--space-3);
 }
 
+/* Fila horizontal — Desactivar/Reactivar y Eliminar siempre en paralelo,
+   nunca apilados, para que se lean como un solo grupo de acciones. */
 .dangerZone {
   display: flex;
   flex-wrap: wrap;
   align-items: flex-start;
-  gap: 12px;
+  gap: var(--space-3);
 }
 
 .deleteRow {
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: var(--space-2);
 }
 
 .helper {
-  color: var(--color-ink-soft);
-  font-size: 12px;
+  color: var(--color-text-soft);
+  font-size: var(--text-xs);
   margin: 0;
 }
 
-/* Colores propios para que se distingan del resto de botones "secondary"
-   (grises) del dashboard — naranja para una acción reversible-ish pero con
-   consecuencias, rojo para la irreversible. Mismo truco que ya usa
-   ConfirmDialog (`!important` sobre el gradiente de `.secondary`). */
+/*
+  Colores propios para que se distingan de los botones "secondary" (neutros)
+  del resto del dashboard — cada uno con su propio semantic token, para que
+  se lean de un vistazo: ámbar = pausa reversible, verde = reactivar (vuelve
+  a la acción de marca), rojo = irreversible. Texto oscuro en los tres (no
+  blanco): en modo oscuro estos tres tokens son colores claros/brillantes,
+  texto blanco encima no pasa AA — ver la misma nota en ConfirmDialog.
+*/
 .deactivateBtn {
-  background: linear-gradient(145deg, #ffb37a, #ff9142) !important;
-  color: #fff !important;
+  background: var(--color-warning) !important;
+  color: var(--color-on-accent) !important;
 }
 
 .reactivateBtn {
-  background: linear-gradient(145deg, #7fe0b4, #5fcf9a) !important;
-  color: #fff !important;
+  background: var(--color-accent) !important;
+  color: var(--color-on-accent) !important;
 }
 
 .deleteBtn {
-  background: linear-gradient(145deg, #ff8b9c, #ff5c72) !important;
-  color: #fff !important;
+  background: var(--color-error) !important;
+  color: var(--color-on-accent) !important;
 }

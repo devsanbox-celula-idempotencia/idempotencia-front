@@ -37,6 +37,12 @@ export interface DatabaseRecord {
  * contraseña solo se ve esta vez, no se puede recuperar después.
  * `status`/`maxStorageMB` son opcionales porque `mySqlDatabase` (aprovisionado
  * automático en el primer login/registro por contraseña) no los incluye.
+ *
+ * `connectionUri` trae la contraseña embebida — es tan sensible como
+ * `password` (no loguear, no persistir, no mandar a analytics). `jdbcUrl`
+ * viene `null` en Mongo (no aplica) — ocultar esa fila en vez de mostrar
+ * "null". Ninguno de los dos vuelve en `GET /databases/{id}` a propósito
+ * (ver `DatabaseDetail`): si se pierden, la única vía es reset-password.
  */
 export interface DatabaseCredentials {
   databaseId: number
@@ -48,6 +54,8 @@ export interface DatabaseCredentials {
   port: number
   loginName: string
   password: string
+  connectionUri: string
+  jdbcUrl: string | null
 }
 
 /**

@@ -1,3 +1,4 @@
+import { AnimatePresence } from 'framer-motion'
 import type { DatabaseRecord } from '@/entities/database'
 import { DatabaseConnectionCard } from '@/widgets/database-connection-card'
 import { DatabaseUsageCard } from '@/widgets/database-usage-card'
@@ -128,15 +129,18 @@ export function DatabaseDetailPanel({
         </div>
       )}
 
-      {pendingAction && (
-        <ConfirmDialog
-          {...CONFIRM_CONTENT[pendingAction]}
-          isSubmitting={isSubmittingAction}
-          errorMessage={actionError}
-          onConfirm={confirmPendingAction}
-          onCancel={cancelPendingAction}
-        />
-      )}
+      <AnimatePresence>
+        {pendingAction && (
+          <ConfirmDialog
+            key="manage-database-confirm"
+            {...CONFIRM_CONTENT[pendingAction]}
+            isSubmitting={isSubmittingAction}
+            errorMessage={actionError}
+            onConfirm={confirmPendingAction}
+            onCancel={cancelPendingAction}
+          />
+        )}
+      </AnimatePresence>
     </div>
   )
 }
