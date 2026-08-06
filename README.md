@@ -3,7 +3,7 @@
 
 Frontend de **idempotencia**, construido con **React + Vite + TypeScript** siguiendo arquitectura **Feature-Sliced Design (FSD)**.
 
-> **Estado actual:** landing con métricas de plataforma, registro/login (email+password y Google/GitHub, ambos reales contra el backend) y dashboard con gestión de bases de datos (crear, listar, ver estado/uso — también real). Ya no hay una pantalla de bienvenida separada: si el registro/login por contraseña aprovisiona automáticamente una base MySQL, sus credenciales se revelan una única vez directamente en el dashboard. Solo las métricas de la landing siguen simuladas (mock en `localStorage`) — el backend expone `GET /statistics` pero es solo para rol Admin y todavía no está conectado. Ver [Integración con backend](#integración-con-backend).
+> **Estado actual:** landing con métricas de plataforma, registro/login (email+password y Google/GitHub, ambos reales contra el backend) y un **dashboard multi-servicio** (`/dashboard/{databases,ai,n8n,dns}`, un `ServiceSwitcher` para moverse entre ellos): **Bases de datos** (crear, listar, ciclo de vida completo) e **IA como servicio** (generar/revocar API-Keys, ver consumo, ejemplos de uso) ya están construidos; **N8N** y **DNS** todavía muestran una vista "Próximamente" — están en el entregable pero backend no compartió su contrato todavía. Si el registro/login por contraseña aprovisiona automáticamente una base MySQL, sus credenciales se revelan una única vez directamente en el dashboard. Solo las métricas de la landing siguen simuladas (mock en `localStorage`) — el backend expone `GET /statistics` pero es solo para rol Admin y todavía no está conectado. Ver [Integración con backend](#integración-con-backend).
 
 - **Dominio de destino:** `idempotencia.andrescortes.dev`
 - **Tipo de sitio:** SPA estática (sin SSR) que consume un backend externo para autenticación
@@ -76,6 +76,7 @@ El backend ("API Colmena") está documentado por el equipo de backend. Estado ac
 | Crear/listar bases de datos (`POST /databases`, `GET /databases`) | **Real**, conectado en `shared/api/databaseApi.ts`. Los 4 motores (`SqlServer`, `Postgres`, `MySql`, `Mongo`) tienen provisioner real en el backend y están seleccionables en el formulario. `GET /databases` nunca devuelve credenciales — solo la respuesta de creación (y `mySqlDatabase`) las trae, una vez, e incluye `connectionUri`/`jdbcUrl` con botón de copiar (`jdbcUrl` es `null` en Mongo — la fila se oculta, nunca se muestra "null"). `connectionUri` trae la contraseña embebida, así que se trata igual de sensible: no se persiste en `localStorage` (`session-storage.ts` la limpia antes de guardar la sesión), solo vive en el puente en memoria de una sola lectura. `GET /databases/{id}` (detalle de una BD ya creada) nunca trae ninguno de los dos — a propósito, no hay contraseña que poner ahí; para recuperar acceso existe `reset-password`. El campo `host` puede ser un nombre de contenedor o una IP según el backend — se muestra tal cual viene, sin asumir ningún formato. |
 | Ciclo de vida de una BD ya creada — detalle (`GET /databases/{id}`), desactivar, reactivar, eliminar, restablecer contraseña | **Conectado, pero el backend advierte que hoy responde 500 en QA.** Código real en `shared/api/databaseApi.ts` y `features/manage-database/`, consumido desde el panel de detalle del dashboard. `deactivate`/`reactivate`/`delete`/`reset-password` dependen de Stored Procedures que aún no corrieron contra QA (`deactivate` además tiene un bug conocido, `CK_ProvDb_Status`, que impide llegar a `Inactive` para poder probar `reactivate` — hay que correr `sql/2026-07-29-reactivate.sql` y desplegar backend primero), y `reset-password` además necesita una cuenta SMTP configurada. `GET /databases/{id}` sí devuelve `host`/`port`/`loginName` (a diferencia del listado) — solo la contraseña nunca vuelve. Reactivar **no** cambia la contraseña (el mensaje de éxito lo aclara explícitamente); solo un botón a la vez según `status` (`Active` → Desactivar, `Inactive` → Reactivar, `Deleted` → ninguno), y tras cualquier acción se relee `GET /databases/{id}` en vez de asumir el status optimista. |
 | Métricas de la landing (usuarios, bases de datos creadas/activas, etc.) | **Mock** (`localStorage`, vía `shared/api/mock/`). El backend expone `GET /statistics`, pero es exclusivo para rol Admin y aún no está conectado. |
+| IA como servicio — API-Keys (`POST/GET /ai/api-keys`, `DELETE /ai/api-keys/{id}`, `GET /ai/api-keys/{id}/usage`) | **Construido contra el contrato acordado con backend, todavía sin desplegar.** `idempotencia-back` hace de BFF frente a un gateway interno (FastAPI sobre Ollama, compatible con el SDK de OpenAI) — el `X-Admin-Token` del gateway nunca sale del backend, y `idempotencia-back` valida ownership antes de reenviar `DELETE`/`usage` (el gateway no lo hace, sería IDOR). `apiKey` completa solo se ve una vez, igual que la contraseña de una BD — se muestra vía el mismo `CredentialRevealCard` genérico, nunca se persiste en `localStorage`. El formulario de creación por ahora solo pide `name` (backend no confirmó si el usuario va a poder elegir sus propios límites de tasa/tokens). El bloque de ejemplos de uso (`features/manage-ai-keys/ui/AiApiExamples.tsx`) usa un placeholder para la URL pública del gateway hasta que la confirmen — configurable vía `VITE_AI_GATEWAY_BASE_URL`. |
 
 **Variable de entorno:**
 
@@ -118,6 +119,7 @@ Variables que controla `docker-compose.yml` (todas en [`.env.example`](.env.exam
 | `FRONTEND_IMAGE` | Nombre:tag de la imagen construida (ej. `idempotencia-frontend:latest`). |
 | `FRONTEND_CONTAINER_NAME` | Nombre del contenedor. |
 | `VITE_API_BASE_URL` | Ver [Integración con backend](#integración-con-backend) — se inyecta en build time. |
+| `VITE_AI_GATEWAY_BASE_URL` | Opcional — base pública del gateway de IA, ver [Integración con backend](#integración-con-backend). Sin definir, los ejemplos de uso muestran un placeholder. |
 
 Docker Compose **no** lee `.env.local` automáticamente (solo `.env`, y el proyecto no versiona uno para no pisar el que usa Vite en dev) — hay que pasar `--env-file .env.local` explícitamente, como en el comando de arriba.
 
@@ -164,22 +166,24 @@ Alternativa sin Docker (build local con Node, sirviendo `dist/` como estático e
 
 ```
 src/
-├── app/          # Inicialización: composición raíz, providers (sesión, router), estilos globales
+├── app/          # Inicialización: composición raíz, providers (sesión, tema, router, motion), estilos globales
 │   ├── providers/
-│   ├── routes/    # AppRouter + guards (RequireAuth, RequireGuest)
+│   ├── routes/    # AppRouter + guards (RequireAuth, RequireGuest) + DashboardLayout (shell multi-servicio)
 │   └── App.tsx
-├── pages/        # Páginas completas: landing, login, register, oauth-callback, dashboard
+├── pages/        # Páginas completas: landing, login, register, oauth-callback,
+│                 # dashboard (bases de datos), dashboard-ai, dashboard-n8n, dashboard-dns
 │   └── <page>/ui + index.ts
-├── widgets/      # Bloques de UI compuestos entre páginas: site-header, platform-stats,
-│                 # database-sidebar, database-connection-card, database-usage-card
+├── widgets/      # Bloques de UI compuestos entre páginas: site-header, service-switcher,
+│                 # platform-stats, database-sidebar, database-connection-card, database-usage-card
 ├── features/     # Casos de uso: auth-with-password, auth-with-provider, create-database,
-│                 # manage-database, logout
-├── entities/     # Modelos de negocio + su UI: user (sesión), database, platform-stats
+│                 # manage-database, manage-ai-keys, logout
+├── entities/     # Modelos de negocio + su UI: user (sesión), database, ai-key, platform-stats
 ├── shared/       # Sin lógica de negocio, reutilizable en todo el proyecto
-│   ├── api/       # authApi/databaseApi/platformStatsApi + httpClient + session-storage + mocks
-│   ├── config/    # Design tokens (colores, tipografías) de marca
-│   ├── lib/       # Helpers puros (formatDate, copyToClipboard, getInitials, downloadTextFile...)
-│   └── ui/        # Componentes de UI genéricos (Button, Input, Logo, Toast, ConfirmDialog, íconos)
+│   ├── api/       # authApi/databaseApi/aiApi/platformStatsApi + httpClient + session-storage + mocks
+│   ├── config/    # Design tokens (colores, tipografía, espaciado, motion) de marca — claro y oscuro
+│   ├── lib/       # Helpers puros + theme/ (ThemeProvider) + motion/ (constantes de Framer Motion)
+│   └── ui/        # Componentes de UI genéricos (Button, Input, CredentialRevealCard, ComingSoonPanel,
+│                  # ConfirmDialog, Toast, ThemeToggle, PageTransition, íconos)
 ├── main.tsx      # Entry point de React
 └── vite-env.d.ts
 ```
@@ -196,4 +200,6 @@ Cada slice expone su API pública a través de un `index.ts` (ej. `src/entities/
 
 ## Identidad de marca
 
-Los tokens de diseño (colores, tipografías, sombras del estilo *claymorphism*) viven en [`src/shared/config/tokens.css`](src/shared/config/tokens.css) y están tomados del documento de branding del proyecto. Cualquier nuevo componente debe usar esas variables CSS (`var(--color-*)`, `var(--font-*)`, `var(--shadow-*)`) en vez de valores hardcodeados.
+Rebrand negro + verde (reemplazó el claymorphism pastel original). Los tokens de diseño viven en [`src/shared/config/tokens.css`](src/shared/config/tokens.css): paleta cruda + tokens semánticos duplicados por tema (`:root`/`[data-theme="dark"]` y `[data-theme="light"]`), tipografía (Inter + JetBrains Mono), escala de espaciado de 8px y constantes de motion. Cualquier nuevo componente debe usar esas variables CSS (`var(--color-*)`, `var(--font-*)`, `var(--shadow-*)`, `var(--space-*)`) en vez de valores hardcodeados — nunca asumir un tema fijo, todo tiene que verse bien en los dos.
+
+El modo claro/oscuro lo maneja `shared/lib/theme/ThemeProvider.tsx` (preferencia guardada en `localStorage`, con fallback a `prefers-color-scheme`) + el `ThemeToggle` en el header. Las animaciones usan Framer Motion con constantes centralizadas en `shared/lib/motion/` — solo `transform`/`opacity` (nunca `width`/`height`/`top`/`left`), y `<MotionConfig reducedMotion="user">` en `AppProviders` respeta `prefers-reduced-motion` para todo el árbol sin chequeos manuales por componente.

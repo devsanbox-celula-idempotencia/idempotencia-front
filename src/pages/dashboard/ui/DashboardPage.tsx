@@ -1,6 +1,5 @@
 import { useEffect, useState } from 'react'
 import { AnimatePresence } from 'framer-motion'
-import { SiteHeader } from '@/widgets/site-header'
 import { DatabaseSidebar } from '@/widgets/database-sidebar'
 import { DatabaseConnectionCard } from '@/widgets/database-connection-card'
 import { CreateDatabaseForm } from '@/features/create-database'
@@ -130,35 +129,32 @@ export function DashboardPage() {
   }
 
   return (
-    <div className={styles.page}>
+    <>
       <AnimatePresence>
         {toastMessage && <Toast key="dashboard-toast" message={toastMessage} onDismiss={() => setToastMessage(null)} />}
       </AnimatePresence>
-      <SiteHeader />
-      <main className={styles.content}>
-        <div>
-          <h1 className={styles.title}>Dashboard</h1>
-          <p className={styles.subtitle}>Gestiona tus bases de datos y revisa su estado.</p>
-        </div>
+      <div>
+        <h1 className={styles.title}>Bases de datos</h1>
+        <p className={styles.subtitle}>Gestiona tus bases de datos y revisa su estado.</p>
+      </div>
 
-        <div className={styles.body}>
-          <DatabaseSidebar
-            databases={databases ?? []}
-            selectedId={selectedId}
-            isCreating={isCreating}
-            onSelect={(id) => {
-              setIsCreating(false)
-              setJustCreated(null)
-              setSelectedId(id)
-            }}
-            onCreateClick={() => {
-              setJustCreated(null)
-              setIsCreating(true)
-            }}
-          />
-          <div className={styles.main}>{renderMain()}</div>
-        </div>
-      </main>
-    </div>
+      <div className={styles.body}>
+        <DatabaseSidebar
+          databases={databases ?? []}
+          selectedId={selectedId}
+          isCreating={isCreating}
+          onSelect={(id) => {
+            setIsCreating(false)
+            setJustCreated(null)
+            setSelectedId(id)
+          }}
+          onCreateClick={() => {
+            setJustCreated(null)
+            setIsCreating(true)
+          }}
+        />
+        <div className={styles.main}>{renderMain()}</div>
+      </div>
+    </>
   )
 }

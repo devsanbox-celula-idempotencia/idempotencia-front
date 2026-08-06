@@ -1,9 +1,6 @@
-import { useState } from 'react'
 import type { DatabaseEngine, DatabaseStatus } from '@/entities/database'
-import { StatusBadge, getDatabaseStatusLabel } from '@/entities/database'
-import { copyToClipboard } from '@/shared/lib/copyToClipboard'
-import { downloadTextFile } from '@/shared/lib/downloadTextFile'
-import styles from './DatabaseConnectionCard.module.css'
+import { StatusBadge } from '@/entities/database'
+import { CredentialRevealCard, type CredentialField } from '@/shared/ui'
 
 /**
  * Estructural, no importa `DatabaseCredentials`/`DatabaseDetail` directo:
@@ -32,53 +29,6 @@ interface DatabaseConnectionCardProps {
   allowDownload?: boolean
 }
 
-interface FieldProps {
-  label: string
-  value: string
-  wide?: boolean
-}
-
-function ConnectionField({ label, value, wide }: FieldProps) {
-  const [copied, setCopied] = useState(false)
-
-  async function handleCopy() {
-    await copyToClipboard(value)
-    setCopied(true)
-    setTimeout(() => setCopied(false), 1500)
-  }
-
-  return (
-    <div className={`${styles.field} ${wide ? styles.fieldWide : ''}`}>
-      <span className={styles.fieldLabel}>{label}</span>
-      <span className={styles.fieldValueRow}>
-        <span className={styles.fieldValue}>{value}</span>
-        <button type="button" className={styles.iconBtn} onClick={handleCopy}>
-          {copied ? 'Copiado' : 'Copiar'}
-        </button>
-      </span>
-    </div>
-  )
-}
-
-function formatCredentialsAsText(credentials: ConnectionInfo): string {
-  return [
-    'idempotencia — Credenciales de base de datos',
-    '',
-    `Host: ${credentials.host}`,
-    `Puerto: ${credentials.port}`,
-    `Motor: ${credentials.engine}`,
-    `Base de datos: ${credentials.dbName}`,
-    `Usuario: ${credentials.loginName}`,
-    `Contraseña: ${credentials.password}`,
-    ...(credentials.connectionUri ? [`Connection URI: ${credentials.connectionUri}`] : []),
-    ...(credentials.jdbcUrl ? [`JDBC URL: ${credentials.jdbcUrl}`] : []),
-    `Estado: ${getDatabaseStatusLabel(credentials.status ?? 'Active')}`,
-    ...(credentials.maxStorageMB !== undefined ? [`Espacio máximo: ${credentials.maxStorageMB} MB`] : []),
-    '',
-    'Guarda este archivo en un lugar seguro — la contraseña no volverá a mostrarse completa.',
-  ].join('\n')
-}
-
 export function DatabaseConnectionCard({
   credentials,
   title = 'Tu base de datos está lista',
@@ -86,44 +36,33 @@ export function DatabaseConnectionCard({
 }: DatabaseConnectionCardProps) {
   const hasPassword = credentials.password !== undefined
 
-  function handleDownload() {
-    downloadTextFile(`${credentials.dbName}-credenciales.txt`, formatCredentialsAsText(credentials))
-  }
+  const fields: CredentialField[] = [
+    { label: 'Host', value: credentials.host, wide: true },
+    { label: 'Puerto', value: String(credentials.port) },
+    { label: 'Motor', value: credentials.engine },
+    { label: 'Base de datos', value: credentials.dbName },
+    { label: 'Usuario', value: credentials.loginName },
+    ...(hasPassword ? [{ label: 'Contraseña', value: credentials.password as string }] : []),
+    ...(credentials.connectionUri ? [{ label: 'Connection URI', value: credentials.connectionUri, wide: true }] : []),
+    ...(credentials.jdbcUrl ? [{ label: 'JDBC URL', value: credentials.jdbcUrl, wide: true }] : []),
+    ...(credentials.maxStorageMB !== undefined
+      ? [{ label: 'Espacio máximo', value: `${credentials.maxStorageMB} MB` }]
+      : []),
+  ]
 
   return (
-    <div className={styles.card}>
-      <div className={styles.header}>
-        <h3 className={styles.title}>{title}</h3>
-        <StatusBadge status={credentials.status ?? 'Active'} />
-      </div>
-
-      {hasPassword && (
-        <p className={styles.warning}>
-          Guarda estas credenciales ahora — la contraseña no volverá a mostrarse completa desde el dashboard.
-        </p>
-      )}
-
-      <div className={styles.fields}>
-        <ConnectionField label="Host" value={credentials.host} wide />
-        <ConnectionField label="Puerto" value={String(credentials.port)} />
-        <ConnectionField label="Motor" value={credentials.engine} />
-        <ConnectionField label="Base de datos" value={credentials.dbName} />
-        <ConnectionField label="Usuario" value={credentials.loginName} />
-        {hasPassword && <ConnectionField label="Contraseña" value={credentials.password as string} />}
-        {credentials.connectionUri && (
-          <ConnectionField label="Connection URI" value={credentials.connectionUri} wide />
-        )}
-        {credentials.jdbcUrl && <ConnectionField label="JDBC URL" value={credentials.jdbcUrl} wide />}
-        {credentials.maxStorageMB !== undefined && (
-          <ConnectionField label="Espacio máximo" value={`${credentials.maxStorageMB} MB`} />
-        )}
-      </div>
-
-      {hasPassword && allowDownload && (
-        <button type="button" className={styles.downloadBtn} onClick={handleDownload}>
-          Descargar credenciales (.txt)
-        </button>
-      )}
-    </div>
+    <CredentialRevealCard
+      title={title}
+      badge={<StatusBadge status={credentials.status ?? 'Active'} />}
+      warningMessage={
+        hasPassword
+          ? 'Guarda estas credenciales ahora — la contraseña no volverá a mostrarse completa desde el dashboard.'
+          : undefined
+      }
+      fields={fields}
+      downloadFileName={hasPassword && allowDownload ? `${credentials.dbName}-credenciales.txt` : undefined}
+      downloadHeading="idempotencia — Credenciales de base de datos"
+      downloadNote="Guarda este archivo en un lugar seguro — la contraseña no volverá a mostrarse completa."
+    />
   )
 }
