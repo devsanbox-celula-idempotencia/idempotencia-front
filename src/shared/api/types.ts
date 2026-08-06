@@ -104,3 +104,53 @@ export interface PlatformStats {
   activeUsers: number
   uptimePercentage: number
 }
+
+/**
+ * IA como servicio (entregable 3): `idempotencia-back` hace de BFF frente al
+ * gateway interno (FastAPI sobre Ollama, compatible con la API de OpenAI) —
+ * el `X-Admin-Token` del gateway nunca sale del backend. El contrato acá
+ * abajo es el que backend confirmó que van a exponer bajo `/ai/api-keys`,
+ * todavía sin desplegar al momento de escribir esto (mismo patrón que el
+ * ciclo de vida de bases de datos: se construye contra el contrato, el 500
+ * hasta que desplieguen queda documentado, no bloquea el frontend).
+ */
+export interface AiApiKey {
+  id: number
+  userId: number
+  name: string
+  /** Primeros 12 caracteres (`sk_live_` + 4) — se muestra como `sk_live_Yh2K••••••••`. */
+  keyPrefix: string
+  /** Revocar es soft-delete (no borra la fila) — el listado trae activas Y revocadas. */
+  isActive: boolean
+  createdAt: string
+  lastUsedAt: string | null
+  expiresAt: string | null
+  dailyTokenLimit: number
+  requestsPerMinute: number
+}
+
+/** Forma de POST /ai/api-keys (201) — `apiKey` completa solo se ve esta vez. */
+export interface AiApiKeyCredentials {
+  id: number
+  name: string
+  apiKey: string
+  createdAt: string
+}
+
+export interface AiUsageDay {
+  day: string
+  requests: number
+  promptTokens: number
+  completionTokens: number
+  totalTokens: number
+}
+
+/** Forma de GET /ai/api-keys/{id}/usage?start=&end= — el rango es obligatorio en el gateway. */
+export interface AiUsageSummary {
+  apiKeyId: number
+  totalRequests: number
+  promptTokens: number
+  completionTokens: number
+  totalTokens: number
+  days: AiUsageDay[]
+}
