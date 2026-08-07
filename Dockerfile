@@ -13,6 +13,12 @@ COPY . .
 ARG VITE_API_BASE_URL=https://api.idempotencia.andrescortes.dev
 ENV VITE_API_BASE_URL=${VITE_API_BASE_URL}
 
+# Base pública del gateway de IA. Vacía por defecto (los ejemplos de uso
+# muestran un placeholder) — pasar --build-arg VITE_AI_GATEWAY_BASE_URL=...
+# para que los ejemplos de la app muestren la URL real.
+ARG VITE_AI_GATEWAY_BASE_URL=
+ENV VITE_AI_GATEWAY_BASE_URL=${VITE_AI_GATEWAY_BASE_URL}
+
 RUN npm run build
 
 # ── Runtime stage ────────────────────────────────────────────────────────
