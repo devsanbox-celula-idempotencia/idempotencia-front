@@ -11,10 +11,7 @@ const TABS: { id: Tab; label: string }[] = [
   { id: 'curl', label: 'curl' },
 ]
 
-const MODEL = 'qwen2.5:3b'
-
-function buildSnippet(tab: Tab, apiKey: string, baseUrl: string): string {
-  const url = `${baseUrl}/v1`
+function buildSnippet(tab: Tab, apiKey: string, url: string, model: string): string {
   if (tab === 'python') {
     return [
       'from openai import OpenAI',
@@ -22,7 +19,7 @@ function buildSnippet(tab: Tab, apiKey: string, baseUrl: string): string {
       `client = OpenAI(api_key="${apiKey}", base_url="${url}")`,
       '',
       'response = client.chat.completions.create(',
-      `    model="${MODEL}",`,
+      `    model="${model}",`,
       '    messages=[{"role": "user", "content": "Hola, ¿cómo estás?"}],',
       ')',
       'print(response.choices[0].message.content)',
@@ -35,7 +32,7 @@ function buildSnippet(tab: Tab, apiKey: string, baseUrl: string): string {
       `const client = new OpenAI({ apiKey: '${apiKey}', baseURL: '${url}' })`,
       '',
       'const response = await client.chat.completions.create({',
-      `  model: '${MODEL}',`,
+      `  model: '${model}',`,
       "  messages: [{ role: 'user', content: 'Hola, ¿cómo estás?' }],",
       '})',
       'console.log(response.choices[0].message.content)',
@@ -46,19 +43,30 @@ function buildSnippet(tab: Tab, apiKey: string, baseUrl: string): string {
     `  -H "Authorization: Bearer ${apiKey}" \\`,
     '  -H "Content-Type: application/json" \\',
     '  -d \'{',
-    `    "model": "${MODEL}",`,
+    `    "model": "${model}",`,
     '    "messages": [{"role": "user", "content": "Hola, ¿cómo estás?"}]',
     "  }'",
   ].join('\n')
 }
 
-export function AiApiExamples({ apiKey }: { apiKey?: string }) {
+interface AiApiExamplesProps {
+  apiKey?: string
+  /** Ya viene con `/v1` incluido cuando sale de una creación real (`POST /me/api-keys`). */
+  baseUrl?: string
+  model?: string
+}
+
+export function AiApiExamples({ apiKey, baseUrl, model }: AiApiExamplesProps) {
   const [tab, setTab] = useState<Tab>('python')
   const [copied, setCopied] = useState(false)
 
-  const baseUrl = AI_GATEWAY_BASE_URL || '<TU_BASE_URL_DEL_GATEWAY>'
+  // Sin una key recién creada no hay `base_url`/`model` reales que mostrar — el env
+  // configurado es la mejor aproximación (no está "quemado", es la config del despliegue),
+  // pero el modelo no tiene de dónde salir hasta que exista una respuesta real del gateway.
+  const effectiveBaseUrl = baseUrl ?? (AI_GATEWAY_BASE_URL ? `${AI_GATEWAY_BASE_URL}/v1` : '<TU_BASE_URL_DEL_GATEWAY>')
+  const effectiveModel = model ?? '<TU_MODELO>'
   const keyForSnippet = apiKey ?? 'TU_API_KEY'
-  const snippet = buildSnippet(tab, keyForSnippet, baseUrl)
+  const snippet = buildSnippet(tab, keyForSnippet, effectiveBaseUrl, effectiveModel)
 
   async function handleCopy() {
     await copyToClipboard(snippet)
@@ -70,13 +78,12 @@ export function AiApiExamples({ apiKey }: { apiKey?: string }) {
     <div className={styles.card}>
       <h3 className={styles.title}>Cómo usar tu API-Key</h3>
       <p className={styles.subtitle}>
-        El gateway es compatible con el SDK oficial de OpenAI — solo cambia <code>base_url</code> y tu clave. Modelo
-        disponible hoy: <code>{MODEL}</code>.
+        El gateway es compatible con el SDK oficial de OpenAI — solo cambia <code>base_url</code>, el modelo y tu clave.
       </p>
 
-      {!AI_GATEWAY_BASE_URL && (
+      {!baseUrl && !AI_GATEWAY_BASE_URL && (
         <p className={styles.pending}>
-          La URL pública del gateway todavía no está confirmada por backend — el ejemplo de abajo usa un placeholder.
+          La URL del gateway no está configurada — el ejemplo de abajo usa un placeholder.
         </p>
       )}
 

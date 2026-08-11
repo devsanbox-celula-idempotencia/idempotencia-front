@@ -33,3 +33,11 @@
 .revoked .dot {
   background: var(--color-text-soft);
 }
+
+.expired {
+  background: color-mix(in srgb, var(--color-warning) 16%, transparent);
+  color: var(--color-warning);
+}
+.expired .dot {
+  background: var(--color-warning);
+}

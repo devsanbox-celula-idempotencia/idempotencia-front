@@ -4,10 +4,12 @@ export const API_BASE_URL: string =
   import.meta.env.VITE_API_BASE_URL ?? 'https://api.idempotencia.andrescortes.dev'
 
 /**
- * Base pública del gateway de IA (FastAPI sobre Ollama, compatible con
- * OpenAI) — todavía no confirmada por backend (ver correciones_a_aconsiderar_backend.md
- * o el hilo de IA). Vacío hasta entonces; los ejemplos de uso muestran un
- * placeholder en su lugar, nunca una URL inventada.
+ * Base del gateway de IA (FastAPI sobre Ollama, compatible con OpenAI) — es
+ * un backend aparte de `idempotencia-back`, con su propio dominio. Ya no es
+ * decorativa: `aiApi.ts` la usa para *todas* las llamadas de gestión de
+ * API-Keys (`/me/api-keys`), no solo para los ejemplos de código. Vacía por
+ * defecto — sin definirla, todo el servicio de IA queda roto, no solo los
+ * ejemplos.
  */
 export const AI_GATEWAY_BASE_URL: string = import.meta.env.VITE_AI_GATEWAY_BASE_URL ?? ''
 

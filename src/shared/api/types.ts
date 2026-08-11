@@ -106,17 +106,16 @@ export interface PlatformStats {
 }
 
 /**
- * IA como servicio (entregable 3): `idempotencia-back` hace de BFF frente al
- * gateway interno (FastAPI sobre Ollama, compatible con la API de OpenAI) —
- * el `X-Admin-Token` del gateway nunca sale del backend. El contrato acá
- * abajo es el que backend confirmó que van a exponer bajo `/ai/api-keys`,
- * todavía sin desplegar al momento de escribir esto (mismo patrón que el
- * ciclo de vida de bases de datos: se construye contra el contrato, el 500
- * hasta que desplieguen queda documentado, no bloquea el frontend).
+ * IA como servicio: **no** pasa por `idempotencia-back` — es un backend
+ * aparte (el gateway, FastAPI sobre Ollama, compatible con la API de
+ * OpenAI), que valida el JWT de la plataforma por su cuenta y expone
+ * `/me/api-keys`. Mismo `Authorization: Bearer` de siempre, otra base URL
+ * (`VITE_AI_GATEWAY_BASE_URL`). El gateway manda `snake_case` y fechas UTC
+ * sin sufijo `Z` — `shared/api/aiApi.ts` normaliza ambas cosas al mapear la
+ * respuesta a estos tipos, así el resto de la app no tiene que pensarlo.
  */
 export interface AiApiKey {
   id: number
-  userId: number
   name: string
   /** Primeros 12 caracteres (`sk_live_` + 4) — se muestra como `sk_live_Yh2K••••••••`. */
   keyPrefix: string
@@ -124,17 +123,21 @@ export interface AiApiKey {
   isActive: boolean
   createdAt: string
   lastUsedAt: string | null
+  /** Una key puede seguir `isActive: true` y ya no servir si esto pasó — ver `computeAiKeyStatus`. */
   expiresAt: string | null
-  dailyTokenLimit: number
-  requestsPerMinute: number
+  dailyTokenLimit: number | null
+  requestsPerMinute: number | null
 }
 
-/** Forma de POST /ai/api-keys (201) — `apiKey` completa solo se ve esta vez. */
+/** Forma de POST /me/api-keys (201) — `apiKey` completa solo se ve esta vez, no persistir. */
 export interface AiApiKeyCredentials {
   id: number
   name: string
   apiKey: string
   createdAt: string
+  /** Vienen del gateway a propósito: si el despliegue cambia de host o de modelo, no hay que tocar el front. */
+  baseUrl: string
+  model: string
 }
 
 export interface AiUsageDay {
@@ -145,9 +148,9 @@ export interface AiUsageDay {
   totalTokens: number
 }
 
-/** Forma de GET /ai/api-keys/{id}/usage?start=&end= — el rango es obligatorio en el gateway. */
+/** Forma de GET /me/api-keys/{id}/usage?start=&end= — sin fechas, el gateway asume los últimos 30 días. */
 export interface AiUsageSummary {
-  apiKeyId: number
+  apiKeyId: number | null
   totalRequests: number
   promptTokens: number
   completionTokens: number
