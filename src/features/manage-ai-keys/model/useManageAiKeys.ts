@@ -1,12 +1,11 @@
 import { useEffect, useState, type FormEvent } from 'react'
-import { ApiError, aiApi } from '@/shared/api'
+import { AiGatewayError, aiApi } from '@/shared/api'
 import type { AiApiKey, AiApiKeyCredentials } from '@/shared/api'
-
-function errorMessage(error: unknown): string {
-  return error instanceof ApiError ? error.message : 'Ocurrió un error inesperado. Intenta de nuevo.'
-}
+import { useAiKeyErrorHandler } from './useAiKeyErrorHandler'
 
 export function useManageAiKeys() {
+  const describeAiKeyError = useAiKeyErrorHandler()
+
   const [keys, setKeys] = useState<AiApiKey[] | null>(null)
   const [listError, setListError] = useState<string | null>(null)
 
@@ -25,13 +24,14 @@ export function useManageAiKeys() {
       .getMyAiApiKeys()
       .then(setKeys)
       .catch((error) => {
-        setListError(errorMessage(error))
+        setListError(describeAiKeyError(error))
         setKeys((prev) => prev ?? [])
       })
   }
 
   useEffect(() => {
     loadKeys()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   async function handleCreate(event: FormEvent) {
@@ -49,7 +49,7 @@ export function useManageAiKeys() {
       setNameInput('')
       loadKeys()
     } catch (error) {
-      setCreateError(errorMessage(error))
+      setCreateError(describeAiKeyError(error))
     } finally {
       setIsCreating(false)
     }
@@ -79,7 +79,13 @@ export function useManageAiKeys() {
       setPendingRevokeId(null)
       loadKeys()
     } catch (error) {
-      setRevokeError(errorMessage(error))
+      setRevokeError(describeAiKeyError(error))
+      // Una clave ajena o ya borrada también da 404 (a propósito, no se puede distinguir) —
+      // en ambos casos lo correcto es refrescar: si ya no está, desaparece de la lista sola.
+      if (error instanceof AiGatewayError && error.code === 'not_found') {
+        setPendingRevokeId(null)
+        loadKeys()
+      }
     } finally {
       setIsRevoking(false)
     }

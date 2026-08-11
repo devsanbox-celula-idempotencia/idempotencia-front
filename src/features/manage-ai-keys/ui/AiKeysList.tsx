@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { AnimatePresence } from 'framer-motion'
-import { AiKeyStatusBadge } from '@/entities/ai-key'
+import { AiKeyStatusBadge, computeAiKeyStatus } from '@/entities/ai-key'
 import type { AiApiKey } from '@/shared/api'
 import { Button, ConfirmDialog } from '@/shared/ui'
 import { formatDate } from '@/shared/lib/formatDate'
@@ -41,7 +41,7 @@ export function AiKeysList({
               <span className={styles.name}>{key.name}</span>
               <span className={styles.prefix}>{key.keyPrefix}••••••••</span>
             </div>
-            <AiKeyStatusBadge isActive={key.isActive} />
+            <AiKeyStatusBadge status={computeAiKeyStatus(key.isActive, key.expiresAt)} />
           </div>
 
           <div className={styles.meta}>
@@ -51,8 +51,14 @@ export function AiKeysList({
             <span>
               Último uso: <strong>{key.lastUsedAt ? formatDate(key.lastUsedAt) : 'Nunca'}</strong>
             </span>
+            {key.expiresAt && (
+              <span>
+                Expira: <strong>{formatDate(key.expiresAt)}</strong>
+              </span>
+            )}
             <span>
-              Límite diario: <strong>{key.dailyTokenLimit.toLocaleString('es-CO')} tokens</strong>
+              Límite diario:{' '}
+              <strong>{key.dailyTokenLimit === null ? 'Sin límite' : `${key.dailyTokenLimit.toLocaleString('es-CO')} tokens`}</strong>
             </span>
           </div>
 
