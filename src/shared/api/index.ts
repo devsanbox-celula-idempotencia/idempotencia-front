@@ -1,6 +1,7 @@
 export * as authApi from './authApi'
 export * as databaseApi from './databaseApi'
 export * as aiApi from './aiApi'
+export * as dnsApi from './dnsApi'
 export * as platformStatsApi from './platformStatsApi'
 export { resetMockData } from './mock/mockStore'
 export { ApiError } from './httpClient'
@@ -14,11 +15,14 @@ export type {
   AiUsageSummary,
   AuthProviderName,
   AuthResponse,
+  CreateDnsRecordRequest,
   DatabaseCredentials,
   DatabaseDetail,
   DatabaseEngine,
   DatabaseRecord,
   DatabaseStatus,
+  DnsRecord,
+  DnsZone,
   PlatformStats,
   Role,
 } from './types'

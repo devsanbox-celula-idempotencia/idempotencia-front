@@ -3,11 +3,14 @@ import { readStoredSession } from './session-storage'
 
 export class ApiError extends Error {
   status: number
+  /** Segundos de espera del header `Retry-After` en un 429 — para armar un cooldown real, no solo texto. */
+  retryAfter?: number
 
-  constructor(status: number, message: string) {
+  constructor(status: number, message: string, retryAfter?: number) {
     super(message)
     this.name = 'ApiError'
     this.status = status
+    this.retryAfter = retryAfter
   }
 }
 
@@ -63,10 +66,11 @@ export async function apiFetch<T>(path: string, init: RequestInit = {}): Promise
   const body = contentType.includes('application/json') ? await response.json().catch(() => null) : null
 
   if (response.status === 429) {
-    const retryAfter = response.headers.get('Retry-After')
+    const retryAfterHeader = response.headers.get('Retry-After')
+    const retryAfter = retryAfterHeader ? Number(retryAfterHeader) : undefined
     const baseMessage = extractErrorMessage(body, 'Demasiadas solicitudes.')
     const message = retryAfter ? `${baseMessage} Intenta de nuevo en ${retryAfter}s.` : baseMessage
-    throw new ApiError(429, message)
+    throw new ApiError(429, message, retryAfter)
   }
 
   if (!response.ok) {

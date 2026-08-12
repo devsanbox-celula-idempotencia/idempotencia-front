@@ -157,3 +157,40 @@ export interface AiUsageSummary {
   totalTokens: number
   days: AiUsageDay[]
 }
+
+/**
+ * Subdominios DNS: es del backend principal (`idempotencia-back`, mismo JWT
+ * de siempre), no del gateway de IA. En la práctica el frontend solo ve
+ * `status: 'Active'` — `Provisioning`/`Failed` son transitorios que no
+ * llegan a una respuesta exitosa, y los eliminados/revocados no aparecen en
+ * el listado del usuario. El tipo queda abierto por si backend agrega un
+ * estado nuevo sin avisar (mismo patrón que `DatabaseStatus`).
+ */
+export interface DnsRecord {
+  dnsRecordId: number
+  label: string
+  cell: string
+  fqdn: string
+  recordType: 'A'
+  ipAddress: string
+  proxied: boolean
+  ttl: number
+  status: 'Provisioning' | 'Active' | 'Failed' | 'Deleted' | 'Revoked' | (string & {})
+  createdAt: string
+  updatedAt: string
+  deletedAt: string | null
+}
+
+/** Forma de GET /dns/zone — nunca hardcodear el dominio, cambia entre ambientes. */
+export interface DnsZone {
+  zoneName: string
+  defaultCell: string
+  /** Ej. "{label}.idempotencia.coderhivex.com" — reemplazar "{label}" para la vista previa en vivo. */
+  pattern: string
+}
+
+/** Forma de POST /dns — `cell` no se manda hoy, el backend usa "idempotencia" por defecto. */
+export interface CreateDnsRecordRequest {
+  label: string
+  ipAddress: string
+}
