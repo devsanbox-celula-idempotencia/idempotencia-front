@@ -42,7 +42,7 @@ const SERVICES: ServiceInfo[] = [
   {
     title: 'DNS',
     description: 'Subdominios propios bajo coderhivex.com para tus proyectos, con HTTPS automático.',
-    available: false,
+    available: true,
   },
 ]
 
