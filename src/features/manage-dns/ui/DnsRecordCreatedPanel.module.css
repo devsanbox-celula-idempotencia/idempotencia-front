@@ -51,3 +51,15 @@
   font-size: var(--text-sm);
   margin: 0;
 }
+
+.copyBtnSuccess {
+  background: var(--color-accent-muted-bg) !important;
+  border-color: var(--color-accent) !important;
+  color: var(--color-accent-text) !important;
+}
+
+.copyBtnError {
+  background: color-mix(in srgb, var(--color-error) 16%, transparent) !important;
+  border-color: var(--color-error) !important;
+  color: var(--color-error) !important;
+}

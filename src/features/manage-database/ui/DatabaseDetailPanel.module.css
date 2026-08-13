@@ -64,13 +64,31 @@
   background: var(--color-warning) !important;
   color: var(--color-on-accent) !important;
 }
+.deactivateBtn:hover:not(:disabled) {
+  background: color-mix(in srgb, var(--color-warning) 85%, black) !important;
+}
+.deactivateBtn:active:not(:disabled) {
+  background: color-mix(in srgb, var(--color-warning) 70%, black) !important;
+}
 
 .reactivateBtn {
   background: var(--color-accent) !important;
   color: var(--color-on-accent) !important;
 }
+.reactivateBtn:hover:not(:disabled) {
+  background: color-mix(in srgb, var(--color-accent) 85%, black) !important;
+}
+.reactivateBtn:active:not(:disabled) {
+  background: color-mix(in srgb, var(--color-accent) 70%, black) !important;
+}
 
 .deleteBtn {
   background: var(--color-error) !important;
   color: var(--color-on-accent) !important;
+}
+.deleteBtn:hover:not(:disabled) {
+  background: color-mix(in srgb, var(--color-error) 85%, black) !important;
+}
+.deleteBtn:active:not(:disabled) {
+  background: color-mix(in srgb, var(--color-error) 70%, black) !important;
 }

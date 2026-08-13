@@ -52,8 +52,21 @@
 /*
   Texto oscuro, no blanco: en modo oscuro --color-error es un rojo claro
   (#F87171) — texto blanco encima da ~2.8:1, no pasa AA. Oscuro da ~7.6:1.
+
+  Los !important pisan el fondo verde de la variante "primary" — por eso
+  también hace falta repetirlos en :hover/:active, si no el navegador ignora
+  las reglas normales de Button.module.css y el botón se queda sin ningún
+  efecto visual al pasar el mouse o hacer click.
 */
 .dangerBtn {
   background: var(--color-error) !important;
   color: var(--color-on-accent) !important;
+}
+
+.dangerBtn:hover:not(:disabled) {
+  background: color-mix(in srgb, var(--color-error) 85%, black) !important;
+}
+
+.dangerBtn:active:not(:disabled) {
+  background: color-mix(in srgb, var(--color-error) 70%, black) !important;
 }

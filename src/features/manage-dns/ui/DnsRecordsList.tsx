@@ -1,7 +1,6 @@
-import { useState } from 'react'
 import { AnimatePresence } from 'framer-motion'
 import { Button, ConfirmDialog } from '@/shared/ui'
-import { copyToClipboard } from '@/shared/lib/copyToClipboard'
+import { useCopyToClipboard } from '@/shared/lib/useCopyToClipboard'
 import { formatRelativeDate } from '@/shared/lib/formatRelativeDate'
 import type { DnsRecord } from '@/shared/api'
 import { ReassignIpDialog } from './ReassignIpDialog'
@@ -26,15 +25,14 @@ interface DnsRecordsListProps {
 }
 
 function CopyFqdnButton({ fqdn }: { fqdn: string }) {
-  const [copied, setCopied] = useState(false)
-  async function handleCopy() {
-    await copyToClipboard(fqdn)
-    setCopied(true)
-    setTimeout(() => setCopied(false), 1500)
-  }
+  const { state: copyState, copy } = useCopyToClipboard()
   return (
-    <button type="button" className={styles.copyBtn} onClick={handleCopy}>
-      {copied ? 'Copiado' : 'Copiar'}
+    <button
+      type="button"
+      className={`${styles.copyBtn} ${copyState === 'success' ? styles.copyBtnSuccess : ''} ${copyState === 'error' ? styles.copyBtnError : ''}`}
+      onClick={() => copy(fqdn)}
+    >
+      {copyState === 'success' ? 'Copiado' : copyState === 'error' ? 'No se pudo copiar' : 'Copiar'}
     </button>
   )
 }
