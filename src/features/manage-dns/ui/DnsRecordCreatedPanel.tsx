@@ -1,25 +1,23 @@
-import { useState } from 'react'
 import { Button } from '@/shared/ui'
-import { copyToClipboard } from '@/shared/lib/copyToClipboard'
+import { useCopyToClipboard } from '@/shared/lib/useCopyToClipboard'
 import type { DnsRecord } from '@/shared/api'
 import styles from './DnsRecordCreatedPanel.module.css'
 
 export function DnsRecordCreatedPanel({ record, onDismiss }: { record: DnsRecord; onDismiss: () => void }) {
-  const [copied, setCopied] = useState(false)
-
-  async function handleCopy() {
-    await copyToClipboard(record.fqdn)
-    setCopied(true)
-    setTimeout(() => setCopied(false), 1500)
-  }
+  const { state: copyState, copy } = useCopyToClipboard()
 
   return (
     <div className={styles.card}>
       <span className={styles.badge}>Subdominio listo</span>
       <p className={styles.fqdn}>{record.fqdn}</p>
       <div className={styles.actions}>
-        <Button type="button" variant="secondary" onClick={handleCopy}>
-          {copied ? 'Copiado' : 'Copiar'}
+        <Button
+          type="button"
+          variant="secondary"
+          className={copyState === 'success' ? styles.copyBtnSuccess : copyState === 'error' ? styles.copyBtnError : undefined}
+          onClick={() => copy(record.fqdn)}
+        >
+          {copyState === 'success' ? 'Copiado' : copyState === 'error' ? 'No se pudo copiar' : 'Copiar'}
         </Button>
         <a href={`https://${record.fqdn}`} target="_blank" rel="noreferrer" className={styles.visitLink}>
           Visitar ↗

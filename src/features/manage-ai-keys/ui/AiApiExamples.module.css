@@ -106,6 +106,10 @@
   padding: var(--space-1) var(--space-3);
   border-radius: var(--radius-sm);
   cursor: pointer;
+  transition:
+    background-color var(--motion-fast) var(--motion-ease-out),
+    border-color var(--motion-fast) var(--motion-ease-out),
+    color var(--motion-fast) var(--motion-ease-out);
 }
 
 .copyBtn:hover {
@@ -116,4 +120,18 @@
 .copyBtn:focus-visible {
   outline: 2px solid var(--color-accent);
   outline-offset: 2px;
+}
+
+.copyBtnSuccess,
+.copyBtnSuccess:hover {
+  background: var(--color-accent-muted-bg);
+  border-color: var(--color-accent);
+  color: var(--color-accent-text);
+}
+
+.copyBtnError,
+.copyBtnError:hover {
+  background: color-mix(in srgb, var(--color-error) 16%, transparent);
+  border-color: var(--color-error);
+  color: var(--color-error);
 }

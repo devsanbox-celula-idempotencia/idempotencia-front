@@ -49,9 +49,27 @@
   padding: var(--space-1) var(--space-3);
   cursor: pointer;
   flex: none;
+  transition:
+    background-color var(--motion-fast) var(--motion-ease-out),
+    border-color var(--motion-fast) var(--motion-ease-out),
+    color var(--motion-fast) var(--motion-ease-out);
 }
 .copyBtn:hover {
   color: var(--color-text);
+}
+
+.copyBtnSuccess,
+.copyBtnSuccess:hover {
+  background: var(--color-accent-muted-bg);
+  border-color: var(--color-accent);
+  color: var(--color-accent-text);
+}
+
+.copyBtnError,
+.copyBtnError:hover {
+  background: color-mix(in srgb, var(--color-error) 16%, transparent);
+  border-color: var(--color-error);
+  color: var(--color-error);
 }
 
 .meta {
@@ -77,4 +95,12 @@
 .deleteBtn {
   background: var(--color-error) !important;
   color: var(--color-on-accent) !important;
+}
+
+.deleteBtn:hover:not(:disabled) {
+  background: color-mix(in srgb, var(--color-error) 85%, black) !important;
+}
+
+.deleteBtn:active:not(:disabled) {
+  background: color-mix(in srgb, var(--color-error) 70%, black) !important;
 }

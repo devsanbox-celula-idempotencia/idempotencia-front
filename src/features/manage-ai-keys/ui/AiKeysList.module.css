@@ -70,3 +70,11 @@
   background: var(--color-error) !important;
   color: var(--color-on-accent) !important;
 }
+
+.revokeBtn:hover:not(:disabled) {
+  background: color-mix(in srgb, var(--color-error) 85%, black) !important;
+}
+
+.revokeBtn:active:not(:disabled) {
+  background: color-mix(in srgb, var(--color-error) 70%, black) !important;
+}

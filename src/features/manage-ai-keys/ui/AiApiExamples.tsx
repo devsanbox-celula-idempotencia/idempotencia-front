@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { AI_GATEWAY_BASE_URL } from '@/shared/api'
-import { copyToClipboard } from '@/shared/lib/copyToClipboard'
+import { useCopyToClipboard } from '@/shared/lib/useCopyToClipboard'
 import styles from './AiApiExamples.module.css'
 
 type Tab = 'python' | 'js' | 'curl'
@@ -58,7 +58,7 @@ interface AiApiExamplesProps {
 
 export function AiApiExamples({ apiKey, baseUrl, model }: AiApiExamplesProps) {
   const [tab, setTab] = useState<Tab>('python')
-  const [copied, setCopied] = useState(false)
+  const { state: copyState, copy } = useCopyToClipboard()
 
   // Sin una key recién creada no hay `base_url`/`model` reales que mostrar — el env
   // configurado es la mejor aproximación (no está "quemado", es la config del despliegue),
@@ -67,12 +67,6 @@ export function AiApiExamples({ apiKey, baseUrl, model }: AiApiExamplesProps) {
   const effectiveModel = model ?? '<TU_MODELO>'
   const keyForSnippet = apiKey ?? 'TU_API_KEY'
   const snippet = buildSnippet(tab, keyForSnippet, effectiveBaseUrl, effectiveModel)
-
-  async function handleCopy() {
-    await copyToClipboard(snippet)
-    setCopied(true)
-    setTimeout(() => setCopied(false), 1500)
-  }
 
   return (
     <div className={styles.card}>
@@ -106,8 +100,12 @@ export function AiApiExamples({ apiKey, baseUrl, model }: AiApiExamplesProps) {
         <pre className={styles.pre}>
           <code>{snippet}</code>
         </pre>
-        <button type="button" className={styles.copyBtn} onClick={handleCopy}>
-          {copied ? 'Copiado' : 'Copiar'}
+        <button
+          type="button"
+          className={`${styles.copyBtn} ${copyState === 'success' ? styles.copyBtnSuccess : ''} ${copyState === 'error' ? styles.copyBtnError : ''}`}
+          onClick={() => copy(snippet)}
+        >
+          {copyState === 'success' ? 'Copiado' : copyState === 'error' ? 'No se pudo copiar' : 'Copiar'}
         </button>
       </div>
     </div>
