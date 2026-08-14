@@ -3,7 +3,7 @@ name: Deploy
 on:
   push:
     branches:
-      - QA
+      - main
 
 jobs:
   deploy:
@@ -36,11 +36,11 @@ jobs:
           echo "[+] Conectando por SSH y desplegando..."
           ssh vps << 'ENDSSH'
             set -e
-            cd /home/devop/idempotencia-front-QA/idempotencia-front-QA
+            cd /home/devop/idempotencia-front
             echo "Actualizando repositorio..."
-            git pull origin QA
+            git pull origin main
             echo "Reconstruyendo contenedor..."
-            docker compose down
+            docker compose down -v
             docker compose up -d --build
             echo "Despliegue completado."
           ENDSSH
