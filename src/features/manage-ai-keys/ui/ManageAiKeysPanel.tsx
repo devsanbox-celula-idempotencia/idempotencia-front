@@ -42,7 +42,7 @@ export function ManageAiKeysPanel() {
         <Button variant="primary" onClick={dismissJustCreated}>
           Entendido, ver mis API-Keys
         </Button>
-        <AiApiExamples apiKey={justCreated.apiKey} />
+        <AiApiExamples apiKey={justCreated.apiKey} baseUrl={justCreated.baseUrl} model={justCreated.model} />
       </div>
     )
   }

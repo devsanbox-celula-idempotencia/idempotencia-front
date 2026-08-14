@@ -11,7 +11,7 @@ const SERVICES: Service[] = [
   { path: '/dashboard/databases', label: 'Bases de datos', available: true },
   { path: '/dashboard/ai', label: 'IA', available: true },
   { path: '/dashboard/n8n', label: 'N8N', available: false },
-  { path: '/dashboard/dns', label: 'DNS', available: false },
+  { path: '/dashboard/dns', label: 'DNS', available: true },
 ]
 
 export function ServiceSwitcher() {

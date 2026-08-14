@@ -1,5 +1,5 @@
 import { useState, type ReactNode } from 'react'
-import { copyToClipboard } from '@/shared/lib/copyToClipboard'
+import { useCopyToClipboard } from '@/shared/lib/useCopyToClipboard'
 import { downloadTextFile } from '@/shared/lib/downloadTextFile'
 import { EyeIcon } from '../icons/EyeIcon'
 import { EyeOffIcon } from '../icons/EyeOffIcon'
@@ -27,14 +27,8 @@ interface CredentialRevealCardProps {
 }
 
 function RevealField({ label, value, wide, masked }: CredentialField) {
-  const [copied, setCopied] = useState(false)
   const [visible, setVisible] = useState(!masked)
-
-  async function handleCopy() {
-    await copyToClipboard(value)
-    setCopied(true)
-    setTimeout(() => setCopied(false), 1500)
-  }
+  const { state: copyState, copy } = useCopyToClipboard()
 
   return (
     <div className={`${styles.field} ${wide ? styles.fieldWide : ''}`}>
@@ -51,8 +45,12 @@ function RevealField({ label, value, wide, masked }: CredentialField) {
             {visible ? <EyeOffIcon /> : <EyeIcon />}
           </button>
         )}
-        <button type="button" className={styles.iconBtn} onClick={handleCopy}>
-          {copied ? 'Copiado' : 'Copiar'}
+        <button
+          type="button"
+          className={`${styles.iconBtn} ${copyState === 'success' ? styles.iconBtnSuccess : ''} ${copyState === 'error' ? styles.iconBtnError : ''}`}
+          onClick={() => copy(value)}
+        >
+          {copyState === 'success' ? 'Copiado' : copyState === 'error' ? 'No se pudo copiar' : 'Copiar'}
         </button>
       </span>
     </div>

@@ -1,5 +1,7 @@
+import { useState } from 'react'
 import { motion } from 'framer-motion'
 import { Button } from '../Button/Button'
+import { Input } from '../Input/Input'
 import styles from './ConfirmDialog.module.css'
 
 interface ConfirmDialogProps {
@@ -12,6 +14,12 @@ interface ConfirmDialogProps {
   isSubmitting?: boolean
   danger?: boolean
   errorMessage?: string | null
+  /**
+   * Si se define, el botón de confirmar queda deshabilitado hasta que el
+   * usuario escriba exactamente este texto — para acciones donde un
+   * "¿estás seguro?" no alcanza (ej. eliminar un subdominio en uso).
+   */
+  confirmationText?: string
 }
 
 /** El padre debe envolver el render condicional en <AnimatePresence> para que la salida anime. */
@@ -25,7 +33,11 @@ export function ConfirmDialog({
   isSubmitting = false,
   danger = false,
   errorMessage,
+  confirmationText,
 }: ConfirmDialogProps) {
+  const [typedValue, setTypedValue] = useState('')
+  const confirmDisabled = isSubmitting || (confirmationText !== undefined && typedValue !== confirmationText)
+
   return (
     <motion.div
       className={styles.overlay}
@@ -49,6 +61,16 @@ export function ConfirmDialog({
           {title}
         </h2>
         <p className={styles.message}>{message}</p>
+        {confirmationText !== undefined && (
+          <Input
+            label={`Escribí "${confirmationText}" para confirmar`}
+            name="confirmationText"
+            value={typedValue}
+            onChange={(event) => setTypedValue(event.target.value)}
+            disabled={isSubmitting}
+            autoComplete="off"
+          />
+        )}
         {errorMessage && <p className={styles.error}>{errorMessage}</p>}
         <div className={styles.actions}>
           <Button type="button" variant="ghost" onClick={onCancel} disabled={isSubmitting}>
@@ -59,7 +81,7 @@ export function ConfirmDialog({
             variant={danger ? 'primary' : 'secondary'}
             className={danger ? styles.dangerBtn : undefined}
             onClick={onConfirm}
-            disabled={isSubmitting}
+            disabled={confirmDisabled}
           >
             {isSubmitting ? 'Procesando…' : confirmLabel}
           </Button>

@@ -22,28 +22,54 @@
   gap: var(--space-3);
 }
 
-.rowHeader {
+.rowMain {
   display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
+  align-items: center;
   gap: var(--space-3);
 }
 
-.rowMain {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
+.fqdnLink {
+  font-family: var(--font-mono);
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-text);
+  text-decoration: none;
+  word-break: break-all;
+}
+.fqdnLink:hover {
+  color: var(--color-accent-text);
+  text-decoration: underline;
 }
 
-.name {
-  font-weight: var(--font-weight-semibold);
+.copyBtn {
+  background: none;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  color: var(--color-text-soft);
+  font-size: var(--text-xs);
+  padding: var(--space-1) var(--space-3);
+  cursor: pointer;
+  flex: none;
+  transition:
+    background-color var(--motion-fast) var(--motion-ease-out),
+    border-color var(--motion-fast) var(--motion-ease-out),
+    color var(--motion-fast) var(--motion-ease-out);
+}
+.copyBtn:hover {
   color: var(--color-text);
 }
 
-.prefix {
-  font-family: var(--font-mono);
-  font-size: var(--text-xs);
-  color: var(--color-text-soft);
+.copyBtnSuccess,
+.copyBtnSuccess:hover {
+  background: var(--color-accent-muted-bg);
+  border-color: var(--color-accent);
+  color: var(--color-accent-text);
+}
+
+.copyBtnError,
+.copyBtnError:hover {
+  background: color-mix(in srgb, var(--color-error) 16%, transparent);
+  border-color: var(--color-error);
+  color: var(--color-error);
 }
 
 .meta {
@@ -66,15 +92,15 @@
   gap: var(--space-3);
 }
 
-.revokeBtn {
+.deleteBtn {
   background: var(--color-error) !important;
   color: var(--color-on-accent) !important;
 }
 
-.revokeBtn:hover:not(:disabled) {
+.deleteBtn:hover:not(:disabled) {
   background: color-mix(in srgb, var(--color-error) 85%, black) !important;
 }
 
-.revokeBtn:active:not(:disabled) {
+.deleteBtn:active:not(:disabled) {
   background: color-mix(in srgb, var(--color-error) 70%, black) !important;
 }
